@@ -49,7 +49,6 @@ if [ "$ARG_OUT" == "" ]; then
   echo
   exit 1
 fi
-HVR38=$ARG_REF
 
 # references and tools
 samtools=/opt/conda/envs/samtools/bin/samtools
@@ -102,6 +101,13 @@ elif [ "$INPUT_MODE" == "fq" ]; then
     exit 1
   fi
 fi
+# check input ref file path
+RCK=$(ls -lt $ARG_REF | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
+if [ "$RCK" != "0" ]; then
+  echo "
+Please check the path to the input ref file."
+  exit 1
+fi
 # check specified output space path
 mkdir -p $ARG_OUT
 OSCK=$(ls -lt $ARG_OUT | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";' | head -1)
@@ -136,8 +142,8 @@ elif [ "$INPUT_MODE" == "fq" ]; then
   #run bwa against viral reference
   len=$(zcat $ARG_R1 | head -2 | tail -1 | wc -c)
   # don't align again unless we have to
-  BCK=$(ls -lt viral_reads_se.ids | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
-  if [ "$BCK" != "0" ]; then
+  VCK=$(ls -lt viral_reads_se.ids | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
+  if [ "$VCK" != "0" ]; then
     zcat $ARG_R1 $ARG_R2 | $bwa mem -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
     echo "evaluating viral reads for repeats" >> software.log
     cut -f6 viral_reads_se.reads | sed s/'[0-9]'//g > viral_reads_se.cigar
@@ -209,7 +215,7 @@ echo "ran fastq conversion on reliable viral reads and their mates" >> software.
 date >> software.log
 
 # run bwa against viral reference plus HG38 and removed alignments to viral/human sequence similarity regions and hard to align human regions
-$bwa mem -k $k -t 4 $HVR38 viral_1.fq viral_2.fq | $samtools view -bS - > Viral.bam
+$bwa mem -k $k -t 4 $ARG_REF viral_1.fq viral_2.fq | $samtools view -bS - > Viral.bam
 $samtools sort Viral.bam Viral.sort
 $samtools index Viral.sort.bam
 $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
