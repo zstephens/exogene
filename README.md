@@ -6,11 +6,13 @@ A workflow for detecting viral integrations from both short read and long read s
 ----
 ## usage
 `docker pull exogene_v1`
+
 `docker run -it -v ${HOME}:${HOME} exogene_v1`
 
 ### Create human + viral reference sequence:
 
 (from inside the container)
+
 `/home/scripts/init_ref.sh -i /path/to/hg38.fa -o /path/to/hg38_plus_viral.fa`
 
 ### Running Exogene-SR (with BAM input)

@@ -271,7 +271,7 @@ egrep '^2' VReads_8 | cut -f2- > VReads_9.2
 printf "Read_1_ID\tRead_1_Contig\tRead_1_Position\tRead_1_CIGAR\tRead_1_Sequence\tRead_1_Reference\tRead_2_ID\tRead_2_Contig\tRead_2_Position\tRead_2_CIGAR\tRead_2_Sequence\tRead_2_Reference\n" > VReads_10
 paste VReads_9.1 VReads_9.2 | cut -f1-4,7-12,15- >> VReads_10
 mv VReads_10 Viral_Reads_Report.tsv
-#rm VReads_*
+rm VReads_*
 echo "created viral read details report" >> software.log
 date >> software.log
 
