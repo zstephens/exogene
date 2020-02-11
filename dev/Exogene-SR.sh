@@ -49,6 +49,7 @@ if [ "$ARG_OUT" == "" ]; then
   echo
   exit 1
 fi
+HVR38=$ARG_REF
 
 # references and tools
 samtools=/opt/conda/envs/samtools/bin/samtools
@@ -60,11 +61,6 @@ perl=/usr/bin/perl
 duster=/opt/conda/envs/blast/bin/dustmasker
 awk=/usr/bin/awk
 samreads=/opt/conda/envs/picard/bin/picard
-
-#HVR38=/home/resources/refs/GRCh38_HumanViral_Reference_12-12-2018.fa
-#HVR38=/Users/zach/Desktop/exogene_code/hg38_1-22XY_ViralReference.fa
-HVR38=$ARG_REF
-
 ExcludeRegions=/home/resources/Merged_ExcludeRegions.bed
 Genes1KB=/home/resources/HG38_ProteinCoding-1KB.bed
 GenesGS=/home/resources/HG38_ProteinCoding-GS.bed
@@ -76,7 +72,6 @@ intersectbed=/opt/conda/envs/bedtools/bin/intersectBed
 clusterbed=/opt/conda/envs/bedtools/bin/clusterBed
 mergeBed=/opt/conda/envs/bedtools/bin/mergeBed
 sortBed=/opt/conda/envs/bedtools/bin/sortBed
-
 readlist_to_fq="python /home/scripts/readlist_2_fq.py"
 
 # toss out reads where >25% is flagged by duster as low complexity
@@ -117,7 +112,6 @@ Please check the path to the specified output directory."
 fi
 
 # create result folder
-####name=$(echo $ARG_BAM | tr '/' '\n' | tail -1 | rev | cut -d'.' -f2- | rev)
 name=exogene_out
 cd $ARG_OUT
 mkdir -p $name
