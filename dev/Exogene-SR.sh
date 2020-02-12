@@ -215,7 +215,7 @@ echo "ran fastq conversion on reliable viral reads and their mates" >> software.
 date >> software.log
 
 # run bwa against viral reference plus HG38 and removed alignments to viral/human sequence similarity regions and hard to align human regions
-$bwa mem -k $k -t 4 $ARG_REF viral_1.fq viral_2.fq | $samtools view -bS - > Viral.bam
+$bwa mem -k $k -t 4 $ARG_REF viral_1.fq viral_2.fq 2>bwa.log | $samtools view -bS - > Viral.bam
 $samtools sort Viral.bam Viral.sort
 $samtools index Viral.sort.bam
 $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
