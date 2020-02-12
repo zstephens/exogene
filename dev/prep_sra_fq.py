@@ -3,6 +3,10 @@ import gzip
 
 # python prep_sra_fq.py input.fq output.fq readnum
 
+# example command for getting input fq from SRA:
+#
+# ./fastq-dump --split-3 SRR3105120
+
 def read_fq_entry(fq_file):
 	myName = fq_file.readline().strip()[1:]
 	myName = myName.split(' ')[0]

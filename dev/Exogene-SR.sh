@@ -142,7 +142,7 @@ elif [ "$INPUT_MODE" == "fq" ]; then
   #run bwa against viral reference
   len=$(zcat $ARG_R1 | head -2 | tail -1 | wc -c)
   # don't align again unless we have to
-  VCK=$(ls -lt viral_reads_se.ids | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
+  VCK=$(ls -lt viral_reads_se.ids 2>/dev/null | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
   if [ "$VCK" != "0" ]; then
     zcat $ARG_R1 $ARG_R2 | $bwa mem -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
     echo "evaluating viral reads for repeats" >> software.log
