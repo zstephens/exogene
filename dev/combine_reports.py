@@ -23,7 +23,7 @@ sys.path.append(SIM_PATH)
 from mappability_corgi import MappabilityTrack
 
 BED_DIR    = '/home/resources/bed/'
-BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed',      bed_buffer=50000)],
+BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed.gz',      bed_buffer=50000)],
               ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',             bed_buffer=1000)],
               ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',   bed_buffer=50)],
               ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappabilityTrack.bed.gz', bed_buffer=50)],
@@ -50,7 +50,7 @@ f.close()
 
 VIRAL_ACCESSIONS = '/home/resources/taxid10239.nbr'
 # get viral accession ids and whatnot
-f = open(VIRAL_ACCESSIONSL, 'r')
+f = open(VIRAL_ACCESSIONS, 'r')
 ID_TO_ACCESSION       = {}
 ACCESSION_TO_TAXONOMY = {}
 for line in f:
@@ -165,7 +165,7 @@ VOI = args.v
 VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
 
 if IN_SHORT == '' and IN_LONG == '':
-	print 'Must specify either -s or -l'
+	print('Must specify either -s or -l')
 	exit(1)
 
 if OUT_DIR[-1] != '/':
@@ -222,11 +222,12 @@ if len(IN_SHORT):
 	f = open(IN_BWALOG, 'r')
 	for line in f:
 		if '[M::mem_pestat] mean and std.dev:' in line:
-			splt = line.strip().split('(')[:-1].split(',')
-			tlen_mean = int(float(splt[0]))
+			splt = line.strip().split('(')[-1][:-1].split(',')
+			tlen_mean = int(float(splt[0]) + 2.*np.mean(readLens))
 			tlen_std  = int(float(splt[1]))
+			break
 	if tlen_mean == None:
-		print 'We were unable to grab template length stats from bwa.log'
+		print('We were unable to grab template length stats from bwa.log')
 		exit(1)
 	print('tlen:', tlen_mean, tlen_std)
 
@@ -623,16 +624,19 @@ bp_dev_sc  = [n for n in bp_dev_sc if n <= 300]
 bp_dev_ccs = [n for n in bp_dev_ccs if n <= 300]
 bp_dev_clr = [n for n in bp_dev_clr if n <= 300]
 print('=== BREAKPOINT DEVIATIONS:')
-print('short:', np.mean(bp_dev_sc))
-print('ccs:  ', np.mean(bp_dev_ccs))
-print('clr:  ', np.mean(bp_dev_clr))
+if len(IN_SHORT):
+	print('short:', np.mean(bp_dev_sc))
+if len(IN_LONG):
+	print('ccs:  ', np.mean(bp_dev_ccs))
+	print('clr:  ', np.mean(bp_dev_clr))
 
 kv = sorted([(class_counts[k],k) for k in class_counts.keys()], reverse=True)
 for n in kv:
 	print(n[0], n[1], 'sc_counts:', sc_count_by_class[n[1]], 'pe_counts:', pe_count_by_class[n[1]])
 
-print('')
-print('avg sc vs. clr:', bp_dist_sc_clr, np.mean(bp_dist_sc_clr))
-print('avg sc vs. ccs:', bp_dist_sc_ccs, np.mean(bp_dist_sc_ccs))
-print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
-print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
+if len(IN_SHORT) and len(IN_LONG):
+	print('')
+	print('avg sc vs. clr:', bp_dist_sc_clr, np.mean(bp_dist_sc_clr))
+	print('avg sc vs. ccs:', bp_dist_sc_ccs, np.mean(bp_dist_sc_ccs))
+	print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
+	print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
