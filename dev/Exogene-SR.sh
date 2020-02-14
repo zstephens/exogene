@@ -122,14 +122,17 @@ if [ "$INPUT_MODE" == "bam" ]; then
   echo "input = $ARG_BAM" > software.log
   echo "identifying potential viral read candidates">> software.log
   # run bwa against viral reference
-  $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -Y -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
-  date >> software.log
-  echo "evaluating viral reads for repeats" >> software.log
-  # get length information
-  len=$($samtools view $ARG_BAM | head -10000 | cut -f6 | sort | uniq -c | sort -nr | head -1 | $perl -lane 'print"$F[1]";' | sed s/'M'//g)
-  cut -f6 viral_reads_se.reads | sed s/'[0-9]'//g > viral_reads_se.cigar
-  paste viral_reads_se.cigar viral_reads_se.reads | $perl -lane 'if(($F[0]eq"M")||($F[0]eq"SM")||($F[9]eq"MS")){print">$F[1]\n$F[10]"};' > viral_reads_se.fa
-  fgrep ">" viral_reads_se.fa | cut -b2- | sort | uniq > viral_reads_se.ids
+  # don't align again unless we have to
+  if [ ! -f viral_reads_se.ids ]; then
+    $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -Y -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
+    date >> software.log
+    echo "evaluating viral reads for repeats" >> software.log
+    # get length information
+    len=$($samtools view $ARG_BAM | head -10000 | cut -f6 | sort | uniq -c | sort -nr | head -1 | $perl -lane 'print"$F[1]";' | sed s/'M'//g)
+    cut -f6 viral_reads_se.reads | sed s/'[0-9]'//g > viral_reads_se.cigar
+    paste viral_reads_se.cigar viral_reads_se.reads | $perl -lane 'if(($F[0]eq"M")||($F[0]eq"SM")||($F[9]eq"MS")){print">$F[1]\n$F[10]"};' > viral_reads_se.fa
+    fgrep ">" viral_reads_se.fa | cut -b2- | sort | uniq > viral_reads_se.ids
+  fi
   date >> software.log
 elif [ "$INPUT_MODE" == "fq" ]; then
   echo "input = $ARG_R1 $ARG_R2" > software.log
@@ -320,7 +323,7 @@ lcomplex=$(sort duster.remove | uniq | wc -l)
 decoyc=$($bwa mem -Y -t 4 $Decoy viral_1.fq viral_2.fq | $perl -lane' print"$F[2]\t$F[0]";' | egrep '^chrUn' | cut -f2 | sort | uniq | wc -l)
 decoy=$($perl -e '$math=('$decoyc'/'$vreads')*100;print"$math";'); 
 hq=$(sed '1d' Viral_Reads_Report.tsv | cut -f1,2,7,8 | $perl -lane 'print"$F[1]\t$F[0]\n$F[3]\t$F[2]";' | egrep -v '^chr' | cut -f2 | sort | uniq | wc -l)
-seqsim=$(($vreads-($lcomplex+$hq+$excludecount)))
+seqsim=$(echo "(${vreads}-(${lcomplex}+${hq}+${excludecount}))" | bc)
 printf "TotalReads\tPaired_ViralReads\tViralDecoy_Percent\tLowComplexity_ViralReads\tExcludeRegion_ViralReads\tSeqSimilarity_ViralReads\tHighQuality_ViralReads\n" | tr '\t' '\n' > Sample_QC_Report-1
 printf "$treads\t$vreads\t$decoy\t$lcomplex\t$excludecount\t$seqsim\t$hq\n" | tr '\t' '\n' > Sample_QC_Report-2
 paste Sample_QC_Report-1 Sample_QC_Report-2 > Sample_QC_Report.tsv

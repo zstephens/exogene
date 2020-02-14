@@ -417,9 +417,10 @@ if len(IN_SHORT):
 			data_byReadName[myName] = []
 		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
 		# read 2
-		myRef = splt[ind_ref+r2_offset]
-		myPos = int(splt[ind_pos+r2_offset])
-		myCig = splt[ind_cigar+r2_offset]
+		myRef  = splt[ind_ref+r2_offset]
+		myPos  = int(splt[ind_pos+r2_offset])
+		myCig  = splt[ind_cigar+r2_offset]
+		myMapQ = int(splt[ind_mapq+r2_offset])
 		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
 	f.close()
 
@@ -432,8 +433,9 @@ if len(IN_SHORT):
 			tlen_std  = int(float(splt[1]))
 			break
 	if tlen_mean == None:
-		print('We were unable to grab template length stats from bwa.log')
-		exit(1)
+		print('We were unable to grab template length stats from bwa.log, making a complete guess...')
+		tlen_mean = 350
+		tlen_std  = 50
 	print('tlen:', tlen_mean, tlen_std)
 
 # cluster reads by event
@@ -620,7 +622,7 @@ for i in order_to_process_clusters:
 			scm = np.median(sc_coord_list)
 			scl = [int(abs(n-scm)+0.5) for n in sc_coord_list]
 			#print('short sc:', int(scm), int(np.mean([abs(n-scm) for n in sc_coord_list])))
-			sc_str = 'short sc: ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + '{0:.3f}'.format(np.mean(scl))
+			sc_str = 'short sc: ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + ', std: {0:.2f}'.format(np.mean(scl))
 			bp_dev_sc.extend(scl)
 			scm = int(scm+0.5)
 		elif len(sc_coord_list) == 1:
