@@ -50,16 +50,14 @@ if [ "$ARG_OUT" == "" ]; then
 fi
 
 # check input reads file path
-RCK=$(ls -lt $ARG_READS | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
-if [ "$RCK" != "0" ]; then
+if [ ! -f $ARG_READS ]; then
   echo "
 Please check the path to the input reads file."
   exit 1
 fi
 
 # check input ref file path
-RCK=$(ls -lt $ARG_REF | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";')
-if [ "$RCK" != "0" ]; then
+if [ ! -f $ARG_REF ]; then
   echo "
 Please check the path to the input ref file."
   exit 1

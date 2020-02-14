@@ -16,6 +16,196 @@ import matplotlib.cm as cmx
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 
+COMPARE =  ['SRR3105120	chr5	1295890',
+            'SRR3105120	chr8	217241',
+            'SRR3105120	chr5	17329',
+            'SRR3105120	chr5	17678',
+            'SRR3105120	chr10	8771546',
+            'SRR3105120	chr4	82622544',
+
+            'SRR3104996	chr8	41103581',
+            'SRR3104996	chr4	39590736',
+            'SRR3104996	chr6	30088520',
+            'SRR3104996	chr6	30088482',
+            'SRR3104996	chr7	22392146',
+            'SRR3104996	chr2	237620154',
+            'SRR3104996	chr2	237620111',
+            'SRR3104996	chr8	42378477',
+            'SRR3104996	chr19	29793096',
+            'SRR3104996	chr19	29793095',
+            'SRR3104996	chr19	29793054',
+            'SRR3104996	chr19	29793022',
+
+            'SRR3104448	chr13	83917449',
+            'SRR3104448	chr17	11403220',
+            'SRR3104448	chr8	52792123',
+            'SRR3104448	chr18	10367',
+            'SRR3104448	chr5	8266464',
+            'SRR3104448	chr20	62190308',
+            'SRR3104448	chr5	10090307',
+            'SRR3104448	chr5	3308064',
+            'SRR3104448	chr15	58582580',
+            'SRR3104448	chr15	58582441',
+            'SRR3104448	chr9	25212632',
+            'SRR3104448	chr4	190122840',
+            'SRR3104448	chr5	2905387',
+            'SRR3104448	chr15	40543664',
+            'SRR3104448	chr18	57145833',
+
+            'SRR3104619	chr10	64483',
+            'SRR3104619	chr20	51895258',
+            'SRR3104619	chr20	51889998',
+            'SRR3104619	chr22	50306682',
+            'SRR3104619	chr18	80258432',
+            'SRR3104619	chr18	80258405',
+            'SRR3104619	chr18	80258398',
+            'SRR3104619	chr18	80258356',
+            'SRR3104619	chr18	80258300',
+            'SRR3104619	chr2	202299470',
+            'SRR3104619	chr10	16435',
+            'SRR3104619	chr10	16784',
+            'SRR3104619	chr18	16789',
+            'SRR3104619	chr18	17138',
+            'SRR3104619	chr10	100397681',
+            'SRR3104619	chr11	68917256',
+            'SRR3104619	chr7	91644133',
+            'SRR3104619	chr20	56539358',
+            'SRR3104619	chr1	121613259',
+            'SRR3104619	chr10	133787346',
+            'SRR3104619	chr4	190122525',
+            'SRR3104619	chr11	69634206',
+
+            'SRR3104603	chr16	32145512',
+            'SRR3104603	chr16	32107171',
+            'SRR3104603	chr16	32107145',
+            'SRR3104603	chr16	32820710',
+            'SRR3104603	chr16	32781975',
+            'SRR3104603	chr5	1296787',
+            'SRR3104603	chr21	10618958',
+            'SRR3104603	chr16	33088426',
+            'SRR3104603	chr16	33050442',
+            'SRR3104603	chr7	62316676',
+            'SRR3104603	chr2	91468653',
+            'SRR3104603	chr10	42120282',
+            'SRR3104603	chr17	15900891',
+            'SRR3104603	chr16	34943663',
+            'SRR3104603	chr3	156891605',
+            'SRR3104603	chr9	65746070',
+            'SRR3104603	chr9	65753998',
+            'SRR3104603	chr9	65275446',
+            'SRR3104603	chr9	65267508',
+            'SRR3104603	chr9	65267534',
+            'SRR3104603	chr2	132007987',
+
+            'SRR3104723	chr5	1295027',
+            'SRR3104723	chr15	94648284',
+            'SRR3104723	chr7	36271887',
+            'SRR3104723	chr11	69640443',
+            'SRR3104723	chr7	118769373',
+
+            'SRR3104810	chr5	11487',
+            'SRR3104810	chr5	11511',
+            'SRR3104810	chr8	62151482',
+            'SRR3104810	chr2	242183382',
+            'SRR3104810	chr2	242183516',
+            'SRR3104810	chr12	10368',
+            'SRR3104810	chr11	175567',
+            'SRR3104810	chr20	64287347',
+            'SRR3104810	chr20	64287177',
+            'SRR3104810	chr20	64287251',
+            'SRR3104810	chr20	64287265',
+            'SRR3104810	chr20	64286930',
+            'SRR3104810	chr19	35723036',
+            'SRR3104810	chr19	35722630',
+            'SRR3104810	chr8	110545295',
+            'SRR3104810	chr4	190122934',
+            'SRR3104810	chr1	10332',
+            'SRR3104810	chr1	10361',
+            'SRR3104810	chr1	10459',
+            'SRR3104810	chr1	10112',
+
+            'SRR3104595	chr5	1297669',
+            'SRR3104595	chr17	15415816',
+            'SRR3104595	chr12	118373360',
+            'SRR3104595	chr8	78283004',
+            'SRR3104595	chr11	25500262',
+            'SRR3104595	chr11	25480766',
+            'SRR3104595	chr9	61826377',
+            'SRR3104595	chr9	41616223',
+            'SRR3104595	chr9	67754461',
+            'SRR3104595	chr9	41616223',
+            'SRR3104595	chr9	41616220',
+            'SRR3104595	chr5	31280170',
+            'SRR3104595	chr5	31279616',
+            'SRR3104595	chr5	31695703',
+
+            'SRR3105100	chr8	70975979',
+            'SRR3105100	chr8	36766902',
+            'SRR3105100	chr2	39877449',
+            'SRR3105100	chr17	39135579',
+            'SRR3105100	chr16	70047394',
+            'SRR3105100	chr1	17255429',
+            'SRR3105100	chr19	35723013',
+            'SRR3105100	chr11	38490470',
+            'SRR3105100	chr17	30880513',
+            'SRR3105100	chr11	110652666',
+
+            'SRR3105172	chr5	61357385',
+            'SRR3105172	chr5	61357299',
+            'SRR3105172	chr8	140364156',
+            'SRR3105172	chr13	23653602',
+            'SRR3105172	chr9	8034425',
+            'SRR3105172	chr5	1295278',
+            'SRR3105172	chr9	27243575',
+            'SRR3105172	chr1	185249560',
+            'SRR3105172	chr9	133490918',
+            'SRR3105172	chr12	130438461',
+            'SRR3105172	chr1	29851435',
+            'SRR3105172	chr9	10384090',
+            'SRR3105172	chr19	52228429',
+            'SRR3105172	chr1	39539434',
+            'SRR3105172	chr4	31579741',
+            'SRR3105172	chr7	56360200',
+            'SRR3105172	chr17	9229292',
+            'SRR3105172	chr8	83925293',
+            'SRR3105172	chr4	60524040',
+            'SRR3105172	chr4	60524064',
+            'SRR3105172	chr17	5694307',
+            'SRR3105172	chr3	195809695',
+            'SRR3105172	chr7	63743616',
+            'SRR3105172	chr4	127472837',
+            'SRR3105172	chr14	62169356',
+            'SRR3105172	chr2	143030218',
+            'SRR3105172	chr9	108382284',
+            'SRR3105172	chr6	3921274',
+            'SRR3105172	chr13	42878897',
+            'SRR3105172	chr1	44264602',
+            'SRR3105172	chr9	1575912',
+            'SRR3105172	chr16	76556888',
+            'SRR3105172	chr22	19195805',
+            'SRR3105172	chr12	1907751',
+            'SRR3105172	chr19	16496824',
+            'SRR3105172	chr1	90850897',
+            'SRR3105172	chr5	91598259',
+            'SRR3105172	chr2	132269639',
+            'SRR3105172	chr2	4003735',
+            'SRR3105172	chr2	12280854',
+            'SRR3105172	chr7	48309034',
+            'SRR3105172	chr4	170445160']
+
+def get_compare(c,p):
+	closest = None
+	minDist = -1
+	for n in COMPARE:
+		if n[0] == c and abs(p-n[1]) < 1000:
+			if minDist < 0:
+				minDist = abs(p-n[1])
+				closest = n
+			elif abs(p-n[1]) < minDist:
+				minDist = abs(p-n[1])
+				closest = n
+	return closest
+
 # absolute path to this script
 SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
 sys.path.append(SIM_PATH)
@@ -23,11 +213,12 @@ sys.path.append(SIM_PATH)
 from mappability_corgi import MappabilityTrack
 
 BED_DIR    = '/home/resources/bed/'
-BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed.gz',      bed_buffer=50000)],
-              ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',             bed_buffer=1000)],
-              ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',   bed_buffer=50)],
+BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed.gz',               bed_buffer=50000)],
+              ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',                         bed_buffer=1000)],
+              ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',               bed_buffer=50)],
               ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappabilityTrack.bed.gz', bed_buffer=50)],
-              ['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed', bed_buffer=10)]]
+              ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',            bed_buffer=500)],
+              ['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',             bed_buffer=10)]]
 
 HUMAN_CHR  = [str(n) for n in range(1,22+1)] + ['X', 'Y']
 HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
@@ -152,14 +343,14 @@ parser = argparse.ArgumentParser(description='combine_reports.py')
 parser.add_argument('-s', type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
 parser.add_argument('-l', type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
 parser.add_argument('-v', type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
-parser.add_argument('-b', type=str, required=True,  metavar='<str>', help="* bwa.log (for insert length stats)")
+parser.add_argument('-c', type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
 parser.add_argument('-o', type=str, required=True,  metavar='<str>', help="* output_dir/")
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=1)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs if no SC", default=5)
 args = parser.parse_args()
 
 # basic parameters
-(IN_SHORT, IN_LONG, IN_BWALOG, OUT_DIR) = (args.s, args.l, args.b, args.o)
+(IN_SHORT, IN_LONG, OUT_DIR) = (args.s, args.l, args.o)
 
 VOI = args.v
 VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
@@ -168,9 +359,21 @@ if IN_SHORT == '' and IN_LONG == '':
 	print('Must specify either -s or -l')
 	exit(1)
 
+# look in same directory as output report for bwa.log
+IN_BWALOG = None
+if IN_SHORT != '':
+	IN_BWALOG = IN_SHORT.split('/')
+	IN_BWALOG[-1] = 'bwa.log'
+	IN_BWALOG = '/'.join(IN_BWALOG)
+
 if OUT_DIR[-1] != '/':
 	OUT_DIR += '/'
 makedir(OUT_DIR)
+
+COMP_SAMPLE    = args.c.upper()
+COMPARE        = [(n.split('\t')[1], int(n.split('\t')[2])) for n in COMPARE if n.split('\t')[0].upper() == COMP_SAMPLE]
+COMPARE_OUT    = {n:[] for n in COMPARE}
+COMPARE_OUT_FP = []
 
 MIN_LONG_READ_MAPQ = 3			# skip a junction if both ends are below this mapq
 PLOT_BUFF          = 100
@@ -192,12 +395,13 @@ if len(IN_SHORT):
 		if isFirst:
 			isFirst = False
 			splt = line.strip().split('\t')
-			ind_name  = splt.index('Read_1_ID')			# 0
-			ind_ref   = splt.index('Read_1_Contig')		# 1
-			ind_pos   = splt.index('Read_1_Position')	# 2
-			ind_cigar = splt.index('Read_1_CIGAR')		# 3
-			ind_seq   = splt.index('Read_1_Sequence')	# 4
-			r2_offset = 6
+			ind_name  = splt.index('R1_ID')
+			ind_ref   = splt.index('R1_Contig')
+			ind_pos   = splt.index('R1_Pos')
+			ind_cigar = splt.index('R1_CIGAR')
+			ind_seq   = splt.index('R1_Seq')
+			ind_mapq  = splt.index('R1_MAPQ')
+			r2_offset = 7
 			continue
 
 		splt   = line.strip().split('\t')
@@ -205,17 +409,18 @@ if len(IN_SHORT):
 		myRef  = splt[ind_ref]
 		myPos  = int(splt[ind_pos])
 		myCig  = splt[ind_cigar]
+		myMapQ = int(splt[ind_mapq])
 		readLens.append(len(splt[ind_seq]))
 
 		# read 1
 		if myName not in data_byReadName:
 			data_byReadName[myName] = []
-		data_byReadName[myName].append([myRef, myPos, myCig])
+		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
 		# read 2
 		myRef = splt[ind_ref+r2_offset]
 		myPos = int(splt[ind_pos+r2_offset])
 		myCig = splt[ind_cigar+r2_offset]
-		data_byReadName[myName].append([myRef, myPos, myCig])
+		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
 	f.close()
 
 	# tlen stats (for use in estimating breakpoint from discordant paired-end evidence)
@@ -260,7 +465,7 @@ for k in data_byReadName.keys():
 			sc2 = parse_cigar_for_softclip(r2)
 			scDat = None
 			if sc1[0] > 0:
-				scDat = [r1[0], sc1[1], sc1[0]]
+				scDat = [r1[0], sc1[1], sc1[0], r1[3]]
 
 			# paired-end evidence
 			span1 = parse_cigar_for_match(r1)
@@ -385,6 +590,7 @@ for i in order_to_process_clusters:
 	
 	# collapse all sc/pe evidence down by choosing the mode
 	sc_count = {}
+	sc_mapq_byPos = {}
 	pe_count = {}
 	pe_to_report_stratified = []
 	if i < len(evidence_sc):
@@ -392,7 +598,9 @@ for i in order_to_process_clusters:
 			if n != None:
 				if n[1] not in sc_count:
 					sc_count[n[1]] = 0
+					sc_mapq_byPos[n[1]] = []
 				sc_count[n[1]] += 1
+				sc_mapq_byPos[n[1]].append(n[3])
 		for n in evidence_pe[i]:
 			for j in range(n[0],n[1]+1)+range(n[2],n[3]+1):
 				if j not in pe_count:
@@ -412,15 +620,29 @@ for i in order_to_process_clusters:
 			scm = np.median(sc_coord_list)
 			scl = [int(abs(n-scm)+0.5) for n in sc_coord_list]
 			#print('short sc:', int(scm), int(np.mean([abs(n-scm) for n in sc_coord_list])))
-			sc_str = 'short sc: ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + str(np.mean(scl))
+			sc_str = 'short sc: ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + '{0:.3f}'.format(np.mean(scl))
 			bp_dev_sc.extend(scl)
+			scm = int(scm+0.5)
 		elif len(sc_coord_list) == 1:
 			sc_str = 'short sc: ' + str(1) + ' ' + str(sc_coord_list[0]) + ' N/A'
-		mySCCount = len(sc_coord_list)
+			scm = sc_coord_list[0]
+			scl = [-1]
 
+		mapq0_percent = 'N/A'
+		if scm in sc_mapq_byPos:
+			mapq0_frac = float(sc_mapq_byPos[scm].count(0))/len(sc_mapq_byPos[scm])
+			mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
+			sc_str += ', MAPQ=0: ' + mapq0_percent
+
+		if len(COMPARE) and len(scl) >= MIN_SOFTCLIP:
+			#sc_str += ' closest: ' + str(get_compare(clustered_events[i][0][0], int(scm+0.5)))
+			gc = get_compare(clustered_events[i][0][0], int(scm+0.5))
+			if gc != None:
+				COMPARE_OUT[gc].append((clustered_events[i][0][0], int(scm+0.5), len(scl), mapq0_percent, abs(int(scm+0.5)-gc[1])))
+			else:
+				COMPARE_OUT_FP.append((clustered_events[i][0][0], int(scm+0.5), len(scl), mapq0_percent))
+		mySCCount = len(sc_coord_list)
 		max_sc = max(sc_count.values())
-		####sc_to_report = sorted([k for k in sc_count.keys() if sc_count[k] == max_sc])
-		####sc_to_report = sorted_coord_list_to_ranges(sc_to_report)
 
 		# if 1 read, just report it, if multiple, report all coords with >1 read
 		if max_sc == 1:
@@ -588,10 +810,11 @@ for i in order_to_process_clusters:
 	avg_all = int(sum(avg_all)/len(avg_all))
 	bed_chr = clustered_events[i][0][0]
 	bed_pos = avg_all
+
 	####print(igv_pos + '\t',(max_pe, max_sc, len(poly_pb1), len(poly_pb2)))
-	for bed_i in xrange(len(BED_TRACKS)):
-		if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
-			print('--',BED_TRACKS[bed_i][0])
+	####for bed_i in xrange(len(BED_TRACKS)):
+	####	if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
+	####		print('--',BED_TRACKS[bed_i][0])
 
 	BIG_VAL = 9999999
 	min_distance_between_sc_and_pb = BIG_VAL
@@ -640,3 +863,16 @@ if len(IN_SHORT) and len(IN_LONG):
 	print('avg sc vs. ccs:', bp_dist_sc_ccs, np.mean(bp_dist_sc_ccs))
 	print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
 	print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
+
+if len(COMPARE):
+	print('')
+	for n in COMPARE:
+		#print(n, COMPARE_OUT[n], isInBadRange(n[0],n[1])*'in gap')
+		if len(COMPARE_OUT[n]) == 0:
+			anno = [isInBadRange(n[0],n[1])*'gap', BED_TRACKS[2][1].query(n[0],n[1])*'repeats', BED_TRACKS[3][1].query(n[0],n[1])*'mappability', BED_TRACKS[4][1].query(n[0],n[1])*'exclude']
+			print('--- ' + ', '.join([m for m in anno if len(m)]))
+		else:
+			print(COMPARE_OUT[n][0][0], COMPARE_OUT[n][0][1], COMPARE_OUT[n][0][2], COMPARE_OUT[n][0][3], COMPARE_OUT[n][0][4])
+	print('\nNOT IN COMPARE:\n')
+	for n in COMPARE_OUT_FP:
+		print(n[0], n[1], n[2], n[3])
