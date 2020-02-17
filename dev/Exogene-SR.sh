@@ -221,7 +221,6 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   $samtools sort Viral.bam Viral.sort
   $samtools index Viral.sort.bam
   $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
-  excludecount=$(sort bad.list-tmp | uniq | wc -l)
   $bwa mem -Y -k $k -t 4 $RNA viral_reads_se.fa | $perl -lane' print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' >> bad.list-tmp
   sort bad.list-tmp | uniq > bad.list
   # $samtools view Viral.sort.bam | cut -f1,6 |  $awk -v OFS="\t" '{if($2~/.*M.*S.*M.*/)print}' | cut -f1 >> bad.list
@@ -258,13 +257,8 @@ date >> software.log
 $samtools view ${name}_viral.bam | cut -f1,3 > VReads_1.1
 fgrep -f $ViralAcc VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
-$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,3,4,5,6,7,8,10 > VReads_1.4
-cut -f1 VReads_1.4 | sort | uniq -c | $perl -lane 'if($F[0]=="2"){print"$F[1]"};' | sort | uniq > VReads_1.5
-fgrep -f VReads_1.5 VReads_1.4 > VReads_1
-cut -f2 VReads_1 | sed s/'chrEBV'/'EBV'/g | cut -b1-3 > VReads_2
-cut -f6 VReads_1 | sed s/'chrEBV'/'EBV'/g | cut -b1-3 > VReads_3
-paste VReads_2 VReads_3 VReads_1 | $perl -lane 'if((($F[0]ne"chr")&($F[1]eq"="))||(($F[0]eq"chr")&($F[1]ne"="))||(($F[0]ne"chr")&($F[1]eq"chr"))){print"$_"};' | cut -f3- | sort -k1,1 > VReads_4
-$viralreads_to_report VReads_4 $ViralKey Viral_Reads_Report.tsv
+$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,2,3,4,5,6,7,8,10 > VReads_1
+$viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
 rm VReads_*
 echo "created viral read details report" >> software.log
 date >> software.log
@@ -322,7 +316,8 @@ vreads=$(cat viral_reads_se.ids | wc -l)
 lcomplex=$(sort duster.remove | uniq | wc -l)
 decoyc=$($bwa mem -Y -t 4 $Decoy viral_1.fq viral_2.fq | $perl -lane' print"$F[2]\t$F[0]";' | egrep '^chrUn' | cut -f2 | sort | uniq | wc -l)
 decoy=$($perl -e '$math=('$decoyc'/'$vreads')*100;print"$math";'); 
-hq=$(sed '1d' Viral_Reads_Report.tsv | cut -f1,2,7,8 | $perl -lane 'print"$F[1]\t$F[0]\n$F[3]\t$F[2]";' | egrep -v '^chr' | cut -f2 | sort | uniq | wc -l)
+hq=$(sed '1d' Viral_Reads_Report.tsv | cut -f1,2,8,9 | $perl -lane 'print"$F[1]\t$F[0]\n$F[3]\t$F[2]";' | egrep -v '^chr' | cut -f2 | sort | uniq | wc -l)
+excludecount=$($samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 | sort | uniq | wc -l)
 seqsim=$(echo "(${vreads}-(${lcomplex}+${hq}+${excludecount}))" | bc)
 printf "TotalReads\tPaired_ViralReads\tViralDecoy_Percent\tLowComplexity_ViralReads\tExcludeRegion_ViralReads\tSeqSimilarity_ViralReads\tHighQuality_ViralReads\n" | tr '\t' '\n' > Sample_QC_Report-1
 printf "$treads\t$vreads\t$decoy\t$lcomplex\t$excludecount\t$seqsim\t$hq\n" | tr '\t' '\n' > Sample_QC_Report-2
