@@ -1,9 +1,21 @@
+import re
 import sys
 
 # python createViralReadsReport.py viralReadDat viralKeys outReport.tsv
 
 HUMAN_CHR  = [str(n) for n in range(1,23)] + ['X', 'Y', 'M', 'Mt']
 HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
+
+# returns reference span
+REF_CHAR = 'MX=D'
+def parse_cigar_for_match(cigar):
+	letters = re.split(r"\d+",cigar)[1:]
+	numbers = [int(n) for n in re.findall(r"\d+",cigar)]
+	adj = 0
+	for i in xrange(len(letters)):
+		if letters[i] in REF_CHAR:
+			adj += numbers[i]
+	return adj
 
 V_DAT = sys.argv[1]
 V_KEY = sys.argv[2]
@@ -41,13 +53,27 @@ f.write('R2_ID\tR2_Contig\tR2_Pos\tR2_MAPQ\tR2_CIGAR\tR2_Seq\tR2_RefName\n')
 for k in sorted(outDat_by_rName.keys()):
 	if len(outDat_by_rName[k][0]) and len(outDat_by_rName[k][1]):
 
-		# if both reads are multi-mapped, lets consider this one a lost cause
+		# if both reads are multi-mapped...
 		if len(outDat_by_rName[k][0]) >= 2 and len(outDat_by_rName[k][1]) >= 2:
-			for n in outDat_by_rName[k][0]:
-				f2.write('1\t' + '\t'.join(n) + '\n')
-			for n in outDat_by_rName[k][1]:
-				f2.write('2\t' + '\t'.join(n) + '\n')
-			continue
+			# lets go the extra mile to try and salvage some human/viral junctions, if we can
+			isHuman0 = [n[1] in HUMAN_CHR for n in outDat_by_rName[k][0]]
+			isHuman1 = [n[1] in HUMAN_CHR for n in outDat_by_rName[k][1]]
+			if (True in isHuman0 and False in isHuman1) or (True in isHuman0 and False in isHuman1):
+				allRefSpans = []
+				for i in xrange(len(isHuman0)):
+					if isHuman0[i]:
+						allRefSpans.append((parse_cigar_for_match(outDat_by_rName[k][0][i][4]), 0, i))
+				for i in xrange(len(isHuman1)):
+					if isHuman1[i]:
+						allRefSpans.append((parse_cigar_for_match(outDat_by_rName[k][1][i][4]), 1, i))
+				allRefSpans = sorted(allRefSpans,reverse=True)
+				outDat_by_rName[k][allRefSpans[0][1]] = [outDat_by_rName[k][allRefSpans[0][1]][allRefSpans[0][2]]]
+			else:
+				for n in outDat_by_rName[k][0]:
+					f2.write('1\t' + '\t'.join(n) + '\n')
+				for n in outDat_by_rName[k][1]:
+					f2.write('2\t' + '\t'.join(n) + '\n')
+				continue
 
 		if len(outDat_by_rName[k][0]) == 1 and len(outDat_by_rName[k][1]) >= 2:
 			indM = 1

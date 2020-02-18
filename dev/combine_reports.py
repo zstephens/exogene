@@ -296,8 +296,7 @@ def parse_cigar_for_match(readDat):
 			adj += numbers[i]
 	return adj
 
-MAX_REF_DIST = 2000
-def close_enough(j1, j2):
+def close_enough(j1, j2, maxDist=100):
 	# junction format: [chr_human, viral_name, human_pos_start, human_pos_end]
 	if j1[0] != j2[0] or j1[1] != j2[1]:
 		return False
@@ -306,7 +305,7 @@ def close_enough(j1, j2):
 	span_bounds.append(abs(j1[2] - j2[3]))
 	span_bounds.append(abs(j1[3] - j2[2]))
 	span_bounds.append(abs(j1[3] - j2[3]))
-	if min(span_bounds) > MAX_REF_DIST:
+	if min(span_bounds) > maxDist:
 		return False
 	return True
 
