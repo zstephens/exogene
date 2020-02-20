@@ -51,6 +51,14 @@ input FASTQ files must be gzipped, and readnames must end with either "/1" or "/
 `    -m clr \ `  
 `    -o outDir/`  
 
+### Running Exogene-LR (with BAM input)
+
+`/home/Exogene-LR.sh \ `  
+`    -b input.bam \ `  
+`    -r hg38_plus_viral.fa \ `  
+`    -m [hifi/clr] \ `  
+`    -o outDir/`  
+
 ### Intersecting Exogene-SR and Exogene-LR results:
 
 `python /home/scripts/combine_reports.py \`  
