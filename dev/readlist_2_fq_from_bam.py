@@ -1,11 +1,12 @@
 import sys
 import gzip
 
-# samtools view input.bam | python readlist_2_fq_from_bam.py readlist out_r1.fq out_r2.fq
+# samtools view input.bam | python readlist_2_fq_from_bam.py readlist out_r1.fq out_r2.fq outReadCount
 
-RLIST  = sys.argv[1]
-OUT_R1 = sys.argv[2]
-OUT_R2 = sys.argv[3]
+RLIST   = sys.argv[1]
+OUT_R1  = sys.argv[2]
+OUT_R2  = sys.argv[3]
+OUT_CNT = sys.argv[4]
 
 def get_file_handle(fn, rw='r'):
 	if fn[-6:].lower() == '.fq.gz' or fn[-9:].lower() == '.fastq.gz':
@@ -29,10 +30,12 @@ else:
 	print 'No input.'
 	exit(1)
 
+unique_readnames = {}
 for line in input_stream:
 	if len(line) and line[0] != '#':
 		splt  = line.strip().split('\t')
 		rnm   = splt[0]
+		unique_readnames[rnm] = True
 		if rnm not in rDict:
 			continue
 		flag  = int(splt[1])
@@ -44,6 +47,10 @@ for line in input_stream:
 				rDict[rnm][0].append([rdat, qdat])
 			elif flag&128:
 				rDict[rnm][1].append([rdat, qdat])
+
+fo_0 = open(OUT_CNT, 'w')
+fo_0.write(str(len(unique_readnames)))
+fo_0.close()
 
 # only include reads where we can find both members of a pair!
 for k in sorted(rDict.keys()):

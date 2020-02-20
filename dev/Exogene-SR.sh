@@ -173,7 +173,7 @@ fi
 #
 if [ "$INPUT_MODE" == "bam" ]; then
   if [ ! -f viral_1.fq ] || [ ! -f viral_2.fq ]; then
-    $samtools view $ARG_BAM | $readlist_to_fq_bam viral_reads_se.keep viral_1.fq viral_2.fq
+    $samtools view $ARG_BAM | $readlist_to_fq_bam viral_reads_se.keep viral_1.fq viral_2.fq totalReads.count
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   if [ ! -f viral_1.fq ] || [ ! -f viral_2.fq ]; then
@@ -275,7 +275,8 @@ date >> software.log
 
 # create sample QC report
 if [ "$INPUT_MODE" == "bam" ]; then
-  treads=$($samtools view $ARG_BAM | cut -f1 | sort | uniq | wc -l)
+  treads=$(cat totalReads.count)
+  rm totalReads.count
 elif [ "$INPUT_MODE" == "fq" ]; then
   fq_lc=$(wc -l < $ARG_R1)
   treads=$(echo "${fq_lc}/2" | bc)
