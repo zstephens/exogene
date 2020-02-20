@@ -69,7 +69,6 @@ bwa=/opt/conda/envs/bwa/bin/bwa
 perl=/usr/bin/perl
 duster=/opt/conda/envs/blast/bin/dustmasker
 awk=/usr/bin/awk
-samreads=/opt/conda/envs/picard/bin/picard
 ExcludeRegions=/home/resources/bed/Merged_ExcludeRegions.bed
 Genes1KB=/home/resources/bed/HG38_ProteinCoding-1KB.bed
 GenesGS=/home/resources/bed/HG38_ProteinCoding-GS.bed
