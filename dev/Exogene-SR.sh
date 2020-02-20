@@ -2,6 +2,7 @@
 
 USAGE_1="Usage (bam): `basename $0` -b input.bam -r ref.fa -o output_dir/"
 USAGE_2="Usage (fq):  `basename $0` -f1 read1.fq.gz -f2 read2.fq.gz -r ref.fa -o output_dir/"
+USAGE_3="optional arguments: -k bwa_seed_size [40] -d duster_exclude_frac [50]"
 
 #input argument parsing
 ARG_BAM=""
@@ -9,6 +10,10 @@ ARG_R1=""
 ARG_R2=""
 ARG_REF=""
 ARG_OUT=""
+# toss out reads where >40% is flagged by duster as low complexity
+ARG_DUSTER_FRAC=40
+# bwa seed size
+ARG_BWA_SEED=40
 # read input args
 while [[ "$#" -gt 0 ]]; do case $1 in
   -b|--bam) ARG_BAM="$2"; shift;;
@@ -16,6 +21,8 @@ while [[ "$#" -gt 0 ]]; do case $1 in
   -f2|--read2) ARG_R2="$2"; shift;;
   -r|--reference) ARG_REF="$2"; shift;;
   -o|--outdir) ARG_OUT="$2"; shift;;
+  -k|--bwaseed) ARG_BWA_SEED="$2"; shift;;
+  -d|--dusterfrac) ARG_DUSTER_FRAC="$2"; shift;;
   *) echo "Unknown parameter passed: $1"; exit 1;;
 esac; shift; done
 # ensure we're properly in BAM or FQ mode
@@ -28,6 +35,7 @@ else
   echo "Must specify either -b OR -f1 -f2 inputs"
   echo $USAGE_1
   echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -37,6 +45,7 @@ if [ "$ARG_REF" == "" ]; then
   echo "-r input missing"
   echo $USAGE_1
   echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -46,6 +55,7 @@ if [ "$ARG_OUT" == "" ]; then
   echo "-o input missing"
   echo $USAGE_1
   echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -72,12 +82,8 @@ clusterbed=/opt/conda/envs/bedtools/bin/clusterBed
 mergeBed=/opt/conda/envs/bedtools/bin/mergeBed
 sortBed=/opt/conda/envs/bedtools/bin/sortBed
 readlist_to_fq="python /home/scripts/readlist_2_fq.py"
+readlist_to_fq_bam="python /home/scripts/readlist_2_fq_from_bam.py"
 viralreads_to_report="python /home/scripts/createViralReadsReport.py"
-
-# toss out reads where >25% is flagged by duster as low complexity
-ARG_DUSTER_FRAC=25
-# bwa seed size
-k=40
 
 if [ "$INPUT_MODE" == "bam" ]; then
   # check input bam file path
@@ -124,7 +130,7 @@ if [ "$INPUT_MODE" == "bam" ]; then
   # run bwa against viral reference
   # don't align again unless we have to
   if [ ! -f viral_reads_se.ids ]; then
-    $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -Y -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
+    $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
     date >> software.log
     echo "evaluating viral reads for repeats" >> software.log
     # get length information
@@ -141,7 +147,7 @@ elif [ "$INPUT_MODE" == "fq" ]; then
   len=$(zcat $ARG_R1 | head -2 | tail -1 | wc -c)
   # don't align again unless we have to
   if [ ! -f viral_reads_se.reads ]; then
-    zcat $ARG_R1 $ARG_R2 | $bwa mem -Y -k $k -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
+    zcat $ARG_R1 $ARG_R2 | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
     echo "evaluating viral reads for repeats" >> software.log
     cut -f6 viral_reads_se.reads | sed s/'[0-9]'//g > viral_reads_se.cigar
     paste viral_reads_se.cigar viral_reads_se.reads | $perl -lane 'if(($F[0]eq"M")||($F[0]eq"SM")||($F[9]eq"MS")){print">$F[1]\n$F[10]"};' > viral_reads_se.fa
@@ -157,6 +163,7 @@ if [ ! -f viral_reads_se.ids.cleaned ]; then
   export read_len_25p=$read_len_25p; $perl -lane 'if($F[0]>$ENV{read_len_25p}){print"$F[1]"};' duster.out | sort | uniq  > duster.remove
   cut -f2 duster.out | cat - duster.remove | sort | uniq -u > duster.retain
   cat duster.remove viral_reads_se.ids | sort | uniq -u > viral_reads_se.ids.cleaned
+  cat duster.retain viral_reads_se.ids.cleaned | sort | uniq > viral_reads_se.keep
   echo "repeats evaluated" >> software.log
   date >> software.log
 fi
@@ -165,48 +172,10 @@ fi
 #
 # TO SIMPLIFY MY LIFE: IF MODE IS FQ, READS MUST END IN /1 or /2
 #
-cat duster.retain viral_reads_se.ids.cleaned | sort | uniq > viral_reads_se.keep
 if [ "$INPUT_MODE" == "bam" ]; then
-  ckrd=$($samtools view $ARG_BAM | head -1 | cut -f1 | rev | cut -b1,2 | rev | $perl -lane 'if(($F[0]eq"/1")||($F[0]eq"/2")){print"1"}else{print"0"};')
-  if [ "$ckrd" == "1" ]; then
-    $perl -lane 'print"$_/1\n$_/2";' viral_reads_se.keep > viral_reads_se.keep-tmp; mv viral_reads_se.keep-tmp viral_reads_se.keep
-    $samreads FilterSamReads FILTER=includeReadList I=$ARG_BAM RLF=viral_reads_se.keep TMP_DIR=${ARG_OUT} VALIDATION_STRINGENCY=LENIENT O=viral_reads_se.keep.bam
-    $samtools sort -n viral_reads_se.keep.bam viral_reads_se.keep_nsort
-    $samtools view viral_reads_se.keep_nsort.bam | cut -f1,10,11 | $perl -lane 'print"$_\t$F[0]";' | uniq -f3 | cat -n | $perl -lane 'print"$F[0]\t$F[1]\t$F[2]\t$F[3]";' > sample_97.txt
-    cut -f1 sample_97.txt | rev | cut -b1 | rev > sample_98.txt
-    paste sample_98.txt sample_97.txt | cut -f1,3- > sample_99.txt
-    $perl -lane 'if(($F[0]=="1")||($F[0]=="3")||($F[0]=="5")||($F[0]=="7")||($F[0]=="9")){print"\@$F[1]\n$F[2]\n+\n$F[3]"};' sample_99.txt > viral_1.fq
-    $perl -lane 'if(($F[0]=="0")||($F[0]=="2")||($F[0]=="4")||($F[0]=="6")||($F[0]=="8")){print"\@$F[1]\n$F[2]\n+\n$F[3]"};' sample_99.txt > viral_2.fq
-    rm viral_reads_se.keep_nsort.bam
+  if [ ! -f viral_1.fq ] || [ ! -f viral_2.fq ]; then
+    $samtools view $ARG_BAM | $readlist_to_fq_bam viral_reads_se.keep viral_1.fq viral_2.fq
   fi
-  if [ "$ckrd" == "0" ]; then
-    $samreads FilterSamReads FILTER=includeReadList I=$ARG_BAM RLF=viral_reads_se.keep TMP_DIR=${ARG_OUT} VALIDATION_STRINGENCY=LENIENT O=viral_reads_se.keep.bam
-    $samtools bam2fq viral_reads_se.keep.bam > sample_1.fastq
-    cat -n sample_1.fastq | $perl -lane 'print"$_\t$F[0]";' | rev | cut -b1 > sample_key1.txt
-    paste sample_key1.txt sample_1.fastq | $perl -lane 'if(($F[0]=="0")||($F[0]=="2")||($F[0]=="4")||($F[0]=="6")||($F[0]=="8")){print"$F[1]"};' > sample_1_1.txt
-    paste sample_key1.txt sample_1.fastq | $perl -lane 'if(($F[0]=="1")||($F[0]=="3")||($F[0]=="5")||($F[0]=="7")||($F[0]=="9")){print"$F[1]"};' > sample_1_2.txt
-    cat -n sample_1_1.txt | $perl -lane 'print"$_\t$F[0]";' | rev | cut -b1 > sample_key2.txt
-    paste sample_key2.txt sample_1_2.txt | $perl -lane 'if(($F[0]=="1")||($F[0]=="3")||($F[0]=="5")||($F[0]=="7")||($F[0]=="9")){print"$F[1]"};' > sample_1_3.txt
-    paste sample_key2.txt sample_1_1.txt | $perl -lane 'if(($F[0]=="1")||($F[0]=="3")||($F[0]=="5")||($F[0]=="7")||($F[0]=="9")){print"$F[1]"};' > sample_1_4.txt
-    paste sample_key2.txt sample_1_2.txt | $perl -lane 'if(($F[0]=="0")||($F[0]=="2")||($F[0]=="4")||($F[0]=="6")||($F[0]=="8")){print"$F[1]"};' > sample_1_5.txt
-    paste sample_key2.txt sample_1_1.txt | $perl -lane 'if(($F[0]=="0")||($F[0]=="2")||($F[0]=="4")||($F[0]=="6")||($F[0]=="8")){print"$F[1]"};' > sample_1_6.txt
-    rev sample_1_3.txt | cut -b2- > sample_1_3-1.txt
-    rev sample_1_3.txt | cut -b1 > sample_1_3-2.txt
-    paste sample_1_3-1.txt sample_1_3-2.txt sample_1_3.txt sample_1_4.txt sample_1_5.txt sample_1_6.txt sample_1_3.txt | sort -k1,1 -k2n,2 | uniq -f6 | cut -f3-6 > sample_1clean.txt
-    cat -n sample_1clean.txt | $perl -lane 'print"$F[0]";' | rev | cut -b1 | paste - sample_1clean.txt > sample_2clean.txt
-    $perl -lane 'if(($F[0]=="1")||($F[0]=="3")||($F[0]=="5")||($F[0]=="7")||($F[0]=="9")){print"$_"};' sample_2clean.txt | cut -f2- | tr '\t' '\n' > viral_1.fq
-    $perl -lane 'if(($F[0]=="0")||($F[0]=="2")||($F[0]=="4")||($F[0]=="6")||($F[0]=="8")){print"$_"};' sample_2clean.txt | cut -f2- | tr '\t' '\n' > viral_2.fq
-    rm sample_*.fastq
-  fi
-  rm *.reads sample_*.txt
-  # run QC on input BAM file compared to viral fastqs
-  rev viral_reads_se.keep | sed s/'^1\/'//g | sed s/'^2\/'//g | rev | uniq | wc -l > tmp_0
-  $awk 'NR%4==1' viral_1.fq | cut -d' ' -f1 | cut -d'@' -f2- | rev | sed s/'^1\/'//g | sed s/'^2\/'//g | rev > tmp_1
-  $awk 'NR%4==1' viral_2.fq | cut -d' ' -f1 | cut -d'@' -f2- | rev | sed s/'^1\/'//g | sed s/'^2\/'//g | rev > tmp_2
-  cat viral_reads_se.keep tmp_1 tmp_2 | sort | uniq -c | $perl -lane 'if($F[0]=="3"){print"$_"};' | wc -l > tmp_3
-  paste tmp_0 tmp_3 | $perl -lane 'if($F[0]==$F[1]){print"compared the input BAM file with the detected viral reads to make sure nothing was lost"}else{print"***input BAM file is of unknown format, it is possibly from a single end sequencing experiment***"};' >> software.log
-  rm tmp_0 tmp_1 tmp_2 tmp_3
-  date >> software.log
 elif [ "$INPUT_MODE" == "fq" ]; then
   if [ ! -f viral_1.fq ] || [ ! -f viral_2.fq ]; then
     $readlist_to_fq viral_reads_se.keep $ARG_R1 $ARG_R2 viral_1.fq viral_2.fq
@@ -217,11 +186,11 @@ date >> software.log
 
 # run bwa against viral reference plus HG38 and removed alignments to viral/human sequence similarity regions and hard to align human regions
 if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
-  $bwa mem -Y -k $k -t 4 $ARG_REF viral_1.fq viral_2.fq 2>bwa.log | $samtools view -bS - > Viral.bam
+  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $ARG_REF viral_1.fq viral_2.fq 2>bwa.log | $samtools view -bS - > Viral.bam
   $samtools sort Viral.bam Viral.sort
   $samtools index Viral.sort.bam
   $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
-  $bwa mem -Y -k $k -t 4 $RNA viral_reads_se.fa | $perl -lane' print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' >> bad.list-tmp
+  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $perl -lane' print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' >> bad.list-tmp
   sort bad.list-tmp | uniq > bad.list
   # $samtools view Viral.sort.bam | cut -f1,6 |  $awk -v OFS="\t" '{if($2~/.*M.*S.*M.*/)print}' | cut -f1 >> bad.list
   $samtools view -h Viral.sort.bam | fgrep -v -w -f bad.list > ${name}_viral.sam

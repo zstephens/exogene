@@ -9,6 +9,8 @@ HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
 # returns reference span
 REF_CHAR = 'MX=D'
 def parse_cigar_for_match(cigar):
+	if cigar == '*':
+		return 0
 	letters = re.split(r"\d+",cigar)[1:]
 	numbers = [int(n) for n in re.findall(r"\d+",cigar)]
 	adj = 0
@@ -32,7 +34,7 @@ outDat_by_rName = {}
 f = open(V_DAT,'r')
 for line in f:
 	splt = line.strip('\n').split('\t')
-	myRefName = splt[1]
+	myRefName = splt[2]
 	if myRefName in viral_keyDict:
 		myRefName = viral_keyDict[myRefName]
 	if splt[0] not in outDat_by_rName:
