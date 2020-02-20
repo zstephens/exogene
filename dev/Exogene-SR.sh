@@ -112,8 +112,7 @@ Please check the path to the input ref file."
 fi
 # check specified output space path
 mkdir -p $ARG_OUT
-OSCK=$(ls -lt $ARG_OUT | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";' | head -1)
-if [ "$OSCK" != "0" ]; then
+if [ ! -d $ARG_OUT ]; then
   echo "
 Please check the path to the specified output directory."
   exit 1

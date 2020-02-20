@@ -65,8 +65,7 @@ fi
 
 # check specified output space path
 mkdir -p $ARG_OUT
-OSCK=$(ls -lt $ARG_OUT | cut -d' ' -f5 | $perl -lane '$math=$F[0]*0;print"$math";' | head -1)
-if [ "$OSCK" != "0" ]; then
+if [ ! -d $ARG_OUT ]; then
   echo "
 Please check the path to the specified output directory."
   exit 1
@@ -101,12 +100,16 @@ mkdir -p $ARG_OUT
 cd $ARG_OUT
 
 # alignment
-$pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
-$samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+if [ ! -f pbmm2_viralReads.sam ]; then
+  $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
+  $samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+fi
 
 # SV calling
-$pbsv discover $pbsv_disc_preset pbmm2_aln.bam temp.svsig.gz
-$pbsv call $pbsv_call_preset -j 4 -t INS,DEL,INV,DUP,BND $ARG_REF temp.svsig.gz pbsv_out.vcf
+if [ ! -f pbsv_out.vcf ]; then
+  $pbsv discover $pbsv_disc_preset pbmm2_aln.bam temp.svsig.gz
+  $pbsv call $pbsv_call_preset -j 4 -t INS,DEL,INV,DUP,BND $ARG_REF temp.svsig.gz pbsv_out.vcf
+fi
 
 exit 0
 

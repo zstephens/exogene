@@ -587,7 +587,7 @@ sc_count_by_class = {}
 pe_count_by_class = {}
 for i in order_to_process_clusters:
 
-	if clustered_events[i][0][1] != VOI:
+	if len(VOI) and clustered_events[i][0][1] != VOI:
 		continue
 
 	sc_str  = ''
