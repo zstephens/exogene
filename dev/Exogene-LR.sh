@@ -1,26 +1,41 @@
 #!/bin/bash
 
-USAGE_1="Usage (fq.gz): `basename $0` -f input.fq.gz -r ref.fa -m mode -o output_dir/"
+USAGE_1="Usage (hifi): `basename $0` -f input.fq.gz -r ref.fa -m hifi -o output_dir/"
+USAGE_2="Usage (cls):  `basename $0` -f input.fa.gz -r ref.fa -m clr -o output_dir/"
+USAGE_3="Usage (bam):  `basename $0` -b input.bam -r ref.fa -m [hifi/clr] -o output_dir/"
 
 #input argument parsing
 ARG_READS=""
+ARG_BAM=""
 ARG_REF=""
 ARG_MODE=""
 ARG_OUT=""
 # read input args
 while [[ "$#" -gt 0 ]]; do case $1 in
   -f|--reads) ARG_READS="$2"; shift;;
+  -b|--bam) ARG_BAM="$2"; shift;;
   -r|--reference) ARG_REF="$2"; shift;;
   -m|--readmode) ARG_MODE="$2"; shift;;
   -o|--outdir) ARG_OUT="$2"; shift;;
   *) echo "Unknown parameter passed: $1"; exit 1;;
 esac; shift; done
 
-# make sure reads file was specified
-if [ "$ARG_READS" == "" ]; then
+# make sure reads/bam file was specified
+if [ "$ARG_READS" == "" ] && [ "$ARG_BAM" == "" ]; then
   echo
-  echo "-f input missing"
+  echo "must specify either -f or -b"
   echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
+  echo
+  exit 1
+fi
+if [ "$ARG_READS" != "" ] && [ "$ARG_BAM" != "" ]; then
+  echo
+  echo "must specify either -f or -b"
+  echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -29,6 +44,8 @@ if [ "$ARG_MODE" == "" ]; then
   echo
   echo "-m input missing"
   echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -37,6 +54,8 @@ if [ "$ARG_REF" == "" ]; then
   echo
   echo "-r input missing"
   echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -45,6 +64,8 @@ if [ "$ARG_OUT" == "" ]; then
   echo
   echo "-o input missing"
   echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -83,6 +104,8 @@ else
   echo
   echo "-m must be either hifi or clr"
   echo $USAGE_1
+  echo $USAGE_2
+  echo $USAGE_3
   echo
   exit 1
 fi
@@ -93,28 +116,42 @@ pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
 pbsv=/opt/conda/envs/pbmm2/bin/pbsv
 viral_db_json=/home/resources/HumanViral_Reference_12-12-2018_simpleNames.json
 
-vcf_to_fa="python /home/scripts/readlist_2_fq.py"
 grep_virus="python /home/scripts/grep_virus_from_sam.py"
+gen_report="python /home/scripts/plot_viral_long_reads.py"
+vcf_to_fa="python /home/scripts/vcf_2_insfa.py"
 
 mkdir -p $ARG_OUT
 cd $ARG_OUT
 
 # alignment
 if [ ! -f pbmm2_viralReads.sam ]; then
-  $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
-  $samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+  if [ "$ARG_BAM" == "" ]; then
+    $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
+    $samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+    MY_BAM="pbmm2_aln.bam"
+  else
+    $samtools view $ARG_BAM | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+    MY_BAM=$ARG_BAM
+  fi
+fi
+
+# identify viral junctions
+if [ ! -f Viral_Junctions_LongReads.tsv ]; then
+  mkdir -p longread_plots
+  $gen_report -s pbmm2_viralReads.sam -o Viral_Junctions_LongReads.tsv -p longread_plots/
 fi
 
 # SV calling
+if [ ! -f temp.svsig.gz ]; then
+  $pbsv discover $pbsv_disc_preset $MY_BAM temp.svsig.gz
+fi
 if [ ! -f pbsv_out.vcf ]; then
-  $pbsv discover $pbsv_disc_preset pbmm2_aln.bam temp.svsig.gz
   $pbsv call $pbsv_call_preset -j 4 -t INS,DEL,INV,DUP,BND $ARG_REF temp.svsig.gz pbsv_out.vcf
 fi
 
-exit 0
-
 # extract large insertions to check for viral sequence
-$vcf_to_fa pbsv_out.vcf pbsv_ins.fa
-$pbmm2 align $ARG_REF pbsv_ins.fa pbsv_ins.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
-$samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
-
+if [ ! -f pbsv_ins_virus.sam ]; then
+  $vcf_to_fa -v pbsv_out.vcf -p PBSV -o pbsv_ins.fa
+  $pbmm2 align $ARG_REF pbsv_ins.fa pbsv_ins.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
+  $samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
+fi
