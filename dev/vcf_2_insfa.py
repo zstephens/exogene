@@ -2,14 +2,16 @@ import os
 import argparse
 
 parser = argparse.ArgumentParser(description='vcf_2_insfa.py')
-parser.add_argument('-v', type=str, required=True, metavar='<str>', help="* input.vcf")
-parser.add_argument('-p', type=str, required=True, metavar='<str>', help="* program [pbsv,sniffles]")
-parser.add_argument('-o', type=str, required=True, metavar='<str>', help="* output.fa")
+parser.add_argument('-v', type=str, required=True,  metavar='<str>', help="* input.vcf")
+parser.add_argument('-p', type=str, required=True,  metavar='<str>', help="* program [pbsv/sniffles]")
+parser.add_argument('-o', type=str, required=True,  metavar='<str>', help="* output.fa")
+parser.add_argument('-l', type=int, required=False, metavar='<int>', help="minimum ins length [50]", default=50)
 args = parser.parse_args()
 
 IN_VCF    = args.v
 PROGRAM   = args.p
 OUT_READS = args.o
+MIN_LEN   = args.l
 
 f = open(IN_VCF, 'r')
 INTERESTING_INSERTIONS = []
@@ -26,7 +28,8 @@ f.close()
 f = open(OUT_READS, 'w')
 i = 0
 for n in INTERESTING_INSERTIONS:
-	f.write('>insertion_'+str(i)+'_'+str(n[0])+'_'+str(n[1])+'\n')
-	f.write(n[3] + '\n')
-	i += 1
+	if len(n[3]) >= MIN_LEN:
+		f.write('>insertion_'+str(i)+'_'+str(n[0])+'_'+str(n[1])+'\n')
+		f.write(n[3] + '\n')
+		i += 1
 f.close()
