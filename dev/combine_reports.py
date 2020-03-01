@@ -22,19 +22,6 @@ sys.path.append(SIM_PATH+'/')
 
 from sra_comparison import COMPARE
 
-def get_compare(c,p):
-	closest = None
-	minDist = -1
-	for n in COMPARE:
-		if n[0] == c and abs(p-n[1]) < 1000:
-			if minDist < 0:
-				minDist = abs(p-n[1])
-				closest = n
-			elif abs(p-n[1]) < minDist:
-				minDist = abs(p-n[1])
-				closest = n
-	return closest
-
 # absolute path to this script
 SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
 sys.path.append(SIM_PATH)
@@ -79,6 +66,19 @@ for line in f:
 		ID_TO_ACCESSION[splt[1]] = splt[0]
 		ACCESSION_TO_TAXONOMY[splt[0]] = splt[4]
 f.close()
+
+def get_compare(c,p):
+	closest = None
+	minDist = -1
+	for n in COMPARE:
+		if n[0] == c and abs(p-n[1]) < 1000:
+			if minDist < 0:
+				minDist = abs(p-n[1])
+				closest = n
+			elif abs(p-n[1]) < minDist:
+				minDist = abs(p-n[1])
+				closest = n
+	return closest
 
 def isInBadRange(c,p):
 	for n in TELOMERE_HG38:
