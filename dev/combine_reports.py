@@ -495,12 +495,17 @@ for i in order_to_process_clusters:
 		if len(COMPARE) and len(scl) >= MIN_SOFTCLIP:
 			#sc_str += ' closest: ' + str(get_compare(clustered_events[i][0][0], int(scm+0.5)))
 			sc_coords_to_compare = sorted([k for k in sc_count.keys() if sc_count[k] >= MIN_SOFTCLIP])
+			sc_fps = []
+			sc_anyHits = False
 			for scc_to_use in sc_coords_to_compare:
 				gc = get_compare(clustered_events[i][0][0], scc_to_use)
 				if gc != None:
-					COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, len(scl), mapq0_percent, abs(int(scm+0.5)-gc[1])))
+					COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent, abs(int(scm+0.5)-gc[1])))
+					sc_anyHits = True
 				else:
-					COMPARE_OUT_FP.append((clustered_events[i][0][0], scc_to_use, len(scl), mapq0_percent))
+					sc_fps.append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent))
+			if sc_anyHits == False and len(sc_fps):
+				COMPARE_OUT_FP.append([n for n in sc_fps])
 		mySCCount = len(sc_coord_list)
 		max_sc = max(sc_count.values())
 
@@ -728,12 +733,14 @@ if len(COMPARE):
 	print('')
 	print('### START_COMPARE ###')
 	for n in COMPARE:
-		print(n, COMPARE_OUT[n])
 		if len(COMPARE_OUT[n]) == 0:
 			anno = [isInBadRange(n[0],n[1])*'gap', BED_TRACKS[2][1].query(n[0],n[1])*'repeats', BED_TRACKS[3][1].query(n[0],n[1])*'mappability', BED_TRACKS[4][1].query(n[0],n[1])*'exclude']
-			print('--- ' + ', '.join([m for m in anno if len(m)]))
+			print('MISS\t' + ', '.join([m for m in anno if len(m)]))
 		else:
-			print(COMPARE_OUT[n][0][0], COMPARE_OUT[n][0][1], COMPARE_OUT[n][0][2], COMPARE_OUT[n][0][3], COMPARE_OUT[n][0][4])
+			s1 = ' '.join(COMP_OUT[n][0][0:5])
+			s2 = str(n)
+			s3 = str(COMPARE_OUT[n])
+			print(s1 + '\t' + s2 + '\t' + s3)
 	print('\n### NOT_IN_COMPARE ###\n')
 	for n in COMPARE_OUT_FP:
 		print(n[0], n[1], n[2], n[3])
