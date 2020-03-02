@@ -16,8 +16,8 @@ listing = [n for n in os.listdir(OUT_DIR) if n[:8] == 'exogene_']
 for lDir in listing:
 	listing2  = [n for n in os.listdir(OUT_DIR+lDir) if n == 'Integration_Summary.txt']
 	if len(listing2):
-		mySummary = OUT_DIR+lDir+'/'+listing2[0]+'/'
-		print mySummary, exists_and_is_nonZero(mySummary)
+		mySummary = OUT_DIR+lDir+'/'+listing2[0]
+		#print mySummary, exists_and_is_nonZero(mySummary)
 		if exists_and_is_nonZero(mySummary):
 			if lDir[8:] not in dat_out:
 				dat_out[lDir[8:]] = ''
