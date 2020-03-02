@@ -35,6 +35,7 @@ for n in listing:
 	elif n.split('_')[-1][0] == '2':
 		fq_dict[n.split('_')[0]][1] = SRA_FQ_DIR + n
 
+nProcessed = 0
 for sampleName in sorted(fq_dict.keys()):
 	r1 = fq_dict[sampleName][0]
 	r2 = fq_dict[sampleName][1]
@@ -81,8 +82,13 @@ for sampleName in sorted(fq_dict.keys()):
 	if exists_and_is_nonZero(report_out) == False:
 		CMD += COMBINE_REP + ' -ms 20 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
 
-	f = open(OUT_QSH+jobName+'.sh', 'w')
-	f.write(HEADER+'\n'+CMD+'\n')
-	f.close()
+	if len(CMD):
+		f = open(OUT_QSH+jobName+'.sh', 'w')
+		f.write(HEADER+'\n'+CMD+'\n')
+		f.close()
+		os.system('qsub '+OUT_QSH+jobName+'.sh')
+	nProcessed += 1
 
-	break
+	if nProcessed >= 2:
+		break
+		
