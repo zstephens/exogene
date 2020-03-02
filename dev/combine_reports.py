@@ -505,7 +505,8 @@ for i in order_to_process_clusters:
 				else:
 					sc_fps.append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent))
 			if sc_anyHits == False and len(sc_fps):
-				COMPARE_OUT_FP.append([n for n in sc_fps])
+				#COMPARE_OUT_FP.append([n for n in sc_fps])
+				COMPARE_OUT_FP.append((clustered_events[i][0][0], int(scm+0.5), len(scl), mapq0_percent))
 		mySCCount = len(sc_coord_list)
 		max_sc = max(sc_count.values())
 
