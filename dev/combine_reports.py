@@ -736,7 +736,7 @@ if len(args.c) or len(COMPARE):
 	for n in COMPARE:
 		if len(COMPARE_OUT[n]) == 0:
 			anno = [isInBadRange(n[0],n[1])*'gap', BED_TRACKS[2][1].query(n[0],n[1])*'repeats', BED_TRACKS[3][1].query(n[0],n[1])*'mappability', BED_TRACKS[4][1].query(n[0],n[1])*'exclude']
-			print('MISS\t' + ', '.join([m for m in anno if len(m)]))
+			print('MISS\t' + str(n) + '\t' + ', '.join([m for m in anno if len(m)]))
 		else:
 			s1 = ' '.join([str(m) for m in COMPARE_OUT[n][0][0:5]])
 			s2 = str(n)
