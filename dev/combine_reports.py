@@ -183,7 +183,7 @@ if OUT_DIR[-1] != '/':
 makedir(OUT_DIR)
 
 COMP_SAMPLE    = args.c.upper()
-COMPARE        = [(n.split('\t')[1], int(n.split('\t')[2]), int(n.split('\t')[3])) for n in COMPARE if n.split('\t')[0].upper() == COMP_SAMPLE]
+COMPARE        = [(n.split('\t')[1], int(n.split('\t')[2]), n.split('\t')[3]) for n in COMPARE if n.split('\t')[0].upper() == COMP_SAMPLE]
 COMPARE_OUT    = {n:[] for n in COMPARE}
 COMPARE_OUT_FP = []
 
@@ -492,7 +492,7 @@ for i in order_to_process_clusters:
 			mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
 			sc_str += ', MAPQ=0: ' + mapq0_percent
 
-		if len(COMPARE) and len(scl) >= MIN_SOFTCLIP:
+		if (len(args.c) or len(COMPARE)) and len(scl) >= MIN_SOFTCLIP:
 			#sc_str += ' closest: ' + str(get_compare(clustered_events[i][0][0], int(scm+0.5)))
 			sc_coords_to_compare = sorted([k for k in sc_count.keys() if sc_count[k] >= MIN_SOFTCLIP])
 			sc_fps = []
@@ -730,7 +730,7 @@ if len(IN_SHORT) and len(IN_LONG):
 	print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
 	print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
 
-if len(COMPARE):
+if len(args.c) or len(COMPARE):
 	print('')
 	print('### START_COMPARE ###')
 	for n in COMPARE:
