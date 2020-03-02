@@ -30,6 +30,8 @@ for lDir in listing:
 				if startReading:
 					dat_out[lDir[8:]] += line
 			f.close()
+		else:
+			print 'Warning:', lDir, 'has empty Integration_Summary.txt'
 	else:
 		print 'Warning:', lDir, 'does not have Integration_Summary.txt'
 
@@ -37,5 +39,5 @@ collected_results = WORKING_DIR + 'collected_results.txt'
 f = open(collected_results,'w')
 for k in sorted(dat_out.keys()):
 	f.write(dat_out[k])
-f.write('\n')
+	f.write('\n')
 f.close()
