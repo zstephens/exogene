@@ -740,7 +740,7 @@ if len(COMPARE):
 			s1 = ' '.join(COMP_OUT[n][0][0:5])
 			s2 = str(n)
 			s3 = str(COMPARE_OUT[n])
-			print(s1 + '\t' + s2 + '\t' + s3)
+			print('HIT\t' + s1 + '\t' + s2 + '\t' + s3)
 	print('\n### NOT_IN_COMPARE ###\n')
 	for n in COMPARE_OUT_FP:
 		print(n[0], n[1], n[2], n[3])
