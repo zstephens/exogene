@@ -61,6 +61,8 @@ for sampleName in sorted(fq_dict.keys()):
 	reads_report = exo_out + 'Viral_Reads_Report.tsv'
 	plots_out    = exo_out + 'plots/'
 	report_out   = exo_out + 'Integration_Summary.txt'
+
+	runCMD = False
 	
 	CMD  = ''
 	if exists_and_is_nonZero(r1_clean) == False or exists_and_is_nonZero(r2_clean) == False:
@@ -81,8 +83,9 @@ for sampleName in sorted(fq_dict.keys()):
 	#
 	if exists_and_is_nonZero(report_out) == False:
 		CMD += COMBINE_REP + ' -ms 20 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
+		runCMD = True
 
-	if len(CMD):
+	if runCMD:
 		f = open(OUT_QSH+jobName+'.sh', 'w')
 		f.write(HEADER+'\n'+CMD+'\n')
 		f.close()
@@ -91,4 +94,4 @@ for sampleName in sorted(fq_dict.keys()):
 
 	if nProcessed >= 2:
 		break
-		
+
