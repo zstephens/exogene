@@ -59,7 +59,7 @@ for sampleName in sorted(fq_dict.keys()):
 
 	reads_report = exo_out + 'Viral_Reads_Report.tsv'
 	plots_out    = exo_out + 'plots/'
-	report_out   = exo_out + ''
+	report_out   = exo_out + 'Integration_Summary.txt'
 	
 	CMD  = ''
 	if exists_and_is_nonZero(r1_clean) == False or exists_and_is_nonZero(r2_clean) == False:
@@ -78,7 +78,8 @@ for sampleName in sorted(fq_dict.keys()):
 	if haveData == False:
 		CMD += EXOGENE_SR + ' -f1 ' + r1_clean + ' -f2 ' + r2_clean + ' -r ' + REF_HVR38 + ' -o ' + exo_out + '\n'
 	#
-	
+	if exists_and_is_nonZero(report_out) == False:
+		CMD += COMBINE_REP + ' -ms 20 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
 
 	f = open(OUT_QSH+jobName+'.sh', 'w')
 	f.write(HEADER+'\n'+CMD+'\n')
