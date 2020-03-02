@@ -29,7 +29,10 @@ for lDir in listing:
 					line = line.strip()+'\t'+lDir[8:]+'\n'
 				if startReading:
 					dat_out[lDir[8:]] += line
+			f.write('\n')
 			f.close()
+	else:
+		print 'Warning:', lDir, 'does not have Integration_Summary.txt'
 
 collected_results = WORKING_DIR + 'collected_results.txt'
 f = open(collected_results,'w')
