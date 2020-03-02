@@ -30,7 +30,7 @@ for lDir in listing:
 					dat_out[lDir[8:]] += line
 			f.close()
 
-collected_file = WORKING_DIR + 'collected_results.txt'
+collected_results = WORKING_DIR + 'collected_results.txt'
 f = open(collected_results,'w')
 for k in sorted(dat_out.keys()):
 	f.write(dat_out[k])
