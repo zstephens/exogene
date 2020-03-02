@@ -92,6 +92,6 @@ for sampleName in sorted(fq_dict.keys()):
 		os.system('qsub '+OUT_QSH+jobName+'.sh')
 	nProcessed += 1
 
-	if nProcessed >= 2:
+	if nProcessed >= 10:
 		break
 
