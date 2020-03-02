@@ -18,23 +18,10 @@ from matplotlib.collections import PatchCollection
 
 # absolute path to this script
 SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
-sys.path.append(SIM_PATH+'/')
-
-from sra_comparison import COMPARE
-
-# absolute path to this script
-SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
 sys.path.append(SIM_PATH)
 
 from mappability_corgi import MappabilityTrack
-
-BED_DIR    = '/home/resources/bed/'
-BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed.gz',               bed_buffer=50000)],
-              ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',                         bed_buffer=1000)],
-              ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',               bed_buffer=50)],
-              ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappabilityTrack.bed.gz', bed_buffer=50)],
-              ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',            bed_buffer=500)],
-              ['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',             bed_buffer=10)]]
+from sra_comparison import COMPARE
 
 HUMAN_CHR  = [str(n) for n in range(1,22+1)] + ['X', 'Y']
 HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
@@ -49,23 +36,9 @@ TELOMERE_BUFF = 50000
 CENTROMERE_HG38 = [('chr1',122503247,124785432), ('chr1',122026459,122224535), ('chr1',122224635,122503147), ('chr1',124849229,124932724), ('chr1',124785532,124849129), ('chr2',92188145,94090557), ('chr3',91553419,93655574), ('chr3',90772458,91233586), ('chr3',91233686,91247622), ('chr4',49712061,51743951), ('chr5',47153439,47296069), ('chr5',47309184,49591369), ('chr5',46485900,46569062), ('chr5',46569162,46796725), ('chr5',46796825,47061288), ('chr5',49667531,49721203), ('chr5',49721303,50059807), ('chr5',47106994,47153339), ('chr6',58553888,59829934), ('chr7',58169653,60828234), ('chr7',61377788,61528020), ('chr8',44033744,45877265), ('chr9',43389635,45518558), ('chrX',58605579,62412542), ('chrY',10316944,10544039), ('chr10',39686682,39935900), ('chr10',39936000,41497440), ('chr10',41545820,41593521), ('chr10',41497540,41545720), ('chr11',51090417,54342399), ('chr11',54342499,54425074), ('chr11',51078348,51090317), ('chr12',34835295,37185252), ('chr12',34769407,34816611), ('chr13',16282173,17416384), ('chr13',17418662,18051248), ('chr13',16110759,16164892), ('chr13',16249397,16256067), ('chr13',16000000,16022537), ('chr13',16022637,16110659), ('chr13',16164992,16228527), ('chr13',16228627,16249297), ('chr13',16256167,16259412), ('chr13',16259512,16282073), ('chr13',17416484,17416824), ('chr13',17416924,17417264), ('chr13',17417364,17418562), ('chr14',16404448,17538659), ('chr14',17540937,18173523), ('chr14',16228749,16282882), ('chr14',16377502,16400063), ('chr14',16000000,16022537), ('chr14',16140627,16228649), ('chr14',16282982,16346517), ('chr14',16346617,16367287), ('chr14',16367387,16374057), ('chr14',16374157,16377402), ('chr14',17538759,17539099), ('chr14',17539199,17539539), ('chr14',17539639,17540837), ('chr15',17499051,18355008), ('chr15',18355108,19725254), ('chr15',17083673,17498951), ('chr16',36337666,38265669), ('chr16',36311158,36334460), ('chr17',23195018,26566633), ('chr17',22813679,23194918), ('chr17',26566733,26616164), ('chr18',15797855,20561439), ('chr18',15460899,15780377), ('chr18',20696389,20736025), ('chr18',20839797,20861206), ('chr18',20603247,20696289), ('chr18',20736125,20813083), ('chr19',24908689,27190874), ('chr19',24498980,24552652), ('chr19',24552752,24891256), ('chr20',26608145,28494539), ('chr20',26436232,26586955), ('chr20',28648108,28728874), ('chr20',29917404,30038348), ('chr20',28508997,28556953), ('chr20',29125793,29204668), ('chr21',11146733,12280944), ('chr21',12283222,12915808), ('chr21',10864560,10887097), ('chr21',10975319,11029452), ('chr21',11124072,11146633), ('chr21',10887197,10975219), ('chr21',11029552,11093087), ('chr21',11093187,11113857), ('chr21',11113957,11120627), ('chr21',11120727,11123972), ('chr21',12281044,12281384), ('chr21',12281484,12281824), ('chr21',12281924,12283122), ('chr22',13285243,14419454), ('chr22',14421732,15054318), ('chr22',12954788,12977325), ('chr22',13021422,13109444), ('chr22',13227412,13248082), ('chr22',13109544,13163677), ('chr22',13163777,13227312), ('chr22',13248182,13254852), ('chr22',13254952,13258197), ('chr22',13258297,13280858), ('chr22',14419554,14419894), ('chr22',14419994,14420334), ('chr22',14420434,14421632)]
 CENTROMERE_BUFF = 50000
 
-VIRAL_JSON = '/home/resources/HumanViral_Reference_12-12-2018_simpleNames.json'
-# read in viral short-hand that I used for the long read workflow
-f = open(VIRAL_JSON, 'r')
-VIRAL_NAME_DICT = json.load(f)
-f.close()
-
-VIRAL_ACCESSIONS = '/home/resources/taxid10239.nbr'
-# get viral accession ids and whatnot
-f = open(VIRAL_ACCESSIONS, 'r')
-ID_TO_ACCESSION       = {}
-ACCESSION_TO_TAXONOMY = {}
-for line in f:
-	if line[0] != '#':
-		splt = line.strip().split('\t')
-		ID_TO_ACCESSION[splt[1]] = splt[0]
-		ACCESSION_TO_TAXONOMY[splt[0]] = splt[4]
-f.close()
+#
+#
+#
 
 def get_compare(c,p):
 	closest = None
@@ -161,6 +134,12 @@ def makedir(d):
 	if not os.path.isdir(d):
 		os.system('mkdir '+d)
 
+def exists_and_is_nonZero(fn):
+	if os.path.isfile(fn):
+		if os.path.getsize(fn) > 0:
+			return True
+	return False
+
 
 """//////////////////////////////////////////////////
 ////////////    PARSE INPUT ARGUMENTS    ////////////
@@ -168,11 +147,14 @@ def makedir(d):
 
 
 parser = argparse.ArgumentParser(description='combine_reports.py')
-parser.add_argument('-s', type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
-parser.add_argument('-l', type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
-parser.add_argument('-v', type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
-parser.add_argument('-c', type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
-parser.add_argument('-o', type=str, required=True,  metavar='<str>', help="* output_dir/")
+parser.add_argument('-s',  type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
+parser.add_argument('-l',  type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
+parser.add_argument('-v',  type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
+parser.add_argument('-v1', type=str, required=False, metavar='<str>', help="virusNames.json", default='')
+parser.add_argument('-v2', type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
+parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
+parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
+parser.add_argument('-o',  type=str, required=True,  metavar='<str>', help="* output_dir/")
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=1)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs if no SC", default=5)
 args = parser.parse_args()
@@ -193,6 +175,8 @@ if IN_SHORT != '':
 	IN_BWALOG = IN_SHORT.split('/')
 	IN_BWALOG[-1] = 'bwa.log'
 	IN_BWALOG = '/'.join(IN_BWALOG)
+	if exists_and_is_nonZero(IN_BWALOG) == False:
+		print('Warning: bwa.log not found. Will be using default values.')
 
 if OUT_DIR[-1] != '/':
 	OUT_DIR += '/'
@@ -202,6 +186,48 @@ COMP_SAMPLE    = args.c.upper()
 COMPARE        = [(n.split('\t')[1], int(n.split('\t')[2])) for n in COMPARE if n.split('\t')[0].upper() == COMP_SAMPLE]
 COMPARE_OUT    = {n:[] for n in COMPARE}
 COMPARE_OUT_FP = []
+
+BED_DIR = args.b
+if BED_DIR == '':
+	BED_DIR = SIM_PATH + 'resources/'
+BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed',          bed_buffer=50000)],
+              ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',                 bed_buffer=1000)],
+              ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',       bed_buffer=50)],
+              ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappability.bed', bed_buffer=50)],
+              ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',    bed_buffer=500)],
+              ['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',     bed_buffer=10)]]
+
+# read in viral short-hand that I used for the long read workflow
+VIRAL_JSON = args.v1
+if VIRAL_JSON == '':
+	VIRAL_JSON = SIM_PATH + 'resources/HumanViral_Reference_12-12-2018_simpleNames.json'
+if exists_and_is_nonZero(VIRAL_JSON) == False:
+	print('Error: Viral simple-names json not found (-v1)')
+	exit(1)
+f = open(VIRAL_JSON, 'r')
+VIRAL_NAME_DICT = json.load(f)
+f.close()
+
+# get viral accession ids and whatnot
+VIRAL_ACCESSIONS = args.v2
+if VIRAL_ACCESSIONS == '':
+	VIRAL_ACCESSIONS = SIM_PATH + 'resources/taxid10239.nbr'
+if exists_and_is_nonZero(VIRAL_ACCESSIONS) == False:
+	print('Error: Viral accessions-to-name file not found (-v2)')
+	exit(1)
+f = open(VIRAL_ACCESSIONS, 'r')
+ID_TO_ACCESSION       = {}
+ACCESSION_TO_TAXONOMY = {}
+for line in f:
+	if line[0] != '#':
+		splt = line.strip().split('\t')
+		ID_TO_ACCESSION[splt[1]] = splt[0]
+		ACCESSION_TO_TAXONOMY[splt[0]] = splt[4]
+f.close()
+
+#
+#
+#
 
 MIN_LONG_READ_MAPQ = 3			# skip a junction if both ends are below this mapq
 PLOT_BUFF          = 100
@@ -253,13 +279,15 @@ if len(IN_SHORT):
 	f.close()
 
 	# tlen stats (for use in estimating breakpoint from discordant paired-end evidence)
-	f = open(IN_BWALOG, 'r')
-	for line in f:
-		if '[M::mem_pestat] mean and std.dev:' in line:
-			splt = line.strip().split('(')[-1][:-1].split(',')
-			tlen_mean = int(float(splt[0]) + 2.*np.mean(readLens))
-			tlen_std  = int(float(splt[1]))
-			break
+	if exists_and_is_nonZero(IN_BWALOG):
+		f = open(IN_BWALOG, 'r')
+		for line in f:
+			if '[M::mem_pestat] mean and std.dev:' in line:
+				splt = line.strip().split('(')[-1][:-1].split(',')
+				tlen_mean = int(float(splt[0]) + 2.*np.mean(readLens))
+				tlen_std  = int(float(splt[1]))
+				break
+		f.close()
 	if tlen_mean == None:
 		print('We were unable to grab template length stats from bwa.log, making a complete guess...')
 		tlen_mean = 350
