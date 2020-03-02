@@ -70,7 +70,7 @@ for sampleName in sorted(fq_dict.keys()):
 	haveData = False
 	if exists_and_is_nonZero(reads_report):
 			f = open(reads_report,'r')
-			fr = fr.read()
+			fr = f.read()
 			f.close()
 			nlc = fr.count('\n')
 			if nlc > 2:

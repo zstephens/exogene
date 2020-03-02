@@ -41,8 +41,8 @@ HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
 HUMAN_CHR  = {n:True for n in HUMAN_CHR}
 
 LEXICO_2_IND = {'chr1':1, 'chr2':2, 'chr3':3, 'chr10':10, 'chr11':11, 'chr12':12, 'chr19':19, 'chr20':20,
-				'chr4':4, 'chr5':5, 'chr6':6, 'chr13':13, 'chr14':14, 'chr15':15, 'chr21':21, 'chr22':22,
-				'chr7':7, 'chr8':8, 'chr9':9, 'chr16':16, 'chr17':17, 'chr18':18, 'chrX' :23, 'chrY' :24}
+                'chr4':4, 'chr5':5, 'chr6':6, 'chr13':13, 'chr14':14, 'chr15':15, 'chr21':21, 'chr22':22,
+                'chr7':7, 'chr8':8, 'chr9':9, 'chr16':16, 'chr17':17, 'chr18':18, 'chrX' :23, 'chrY' :24}
 
 TELOMERE_HG38 = [('chr1',0,10000), ('chr1',248946422,248956422), ('chr2',0,10000), ('chr2',242183529,242193529), ('chr3',0,10000), ('chr3',198285559,198295559), ('chr4',0,10000), ('chr4',190204555,190214555), ('chr5',0,10000), ('chr5',181528259,181538259), ('chr6',0,10000), ('chr6',170795979,170805979), ('chr7',0,10000), ('chr7',159335973,159345973), ('chr8',0,10000), ('chr8',145128636,145138636), ('chr9',0,10000), ('chr9',138384717,138394717), ('chrX',0,10000), ('chrX',156030895,156040895), ('chrY',0,10000), ('chrY',57217415,57227415), ('chr10',0,10000), ('chr10',133787422,133797422), ('chr11',0,10000), ('chr11',135076622,135086622), ('chr12',0,10000), ('chr12',133265309,133275309), ('chr13',0,10000), ('chr13',114354328,114364328), ('chr14',0,10000), ('chr14',107033718,107043718), ('chr15',0,10000), ('chr15',101981189,101991189), ('chr16',0,10000), ('chr16',90328345,90338345), ('chr17',0,10000), ('chr17',83247441,83257441), ('chr18',0,10000), ('chr18',80363285,80373285), ('chr19',0,10000), ('chr19',58607616,58617616), ('chr20',0,10000), ('chr20',64434167,64444167), ('chr21',0,10000), ('chr21',46699983,46709983), ('chr22',0,10000), ('chr22',50808468,50818468)]
 TELOMERE_BUFF = 50000
@@ -695,8 +695,8 @@ if len(IN_SHORT) and len(IN_LONG):
 	print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
 
 if len(COMPARE):
-      print('')
-	print('###START_COMPARE###')
+	print('')
+	print('### START_COMPARE ###')
 	for n in COMPARE:
 		#print(n, COMPARE_OUT[n], isInBadRange(n[0],n[1])*'in gap')
 		if len(COMPARE_OUT[n]) == 0:
@@ -704,6 +704,6 @@ if len(COMPARE):
 			print('--- ' + ', '.join([m for m in anno if len(m)]))
 		else:
 			print(COMPARE_OUT[n][0][0], COMPARE_OUT[n][0][1], COMPARE_OUT[n][0][2], COMPARE_OUT[n][0][3], COMPARE_OUT[n][0][4])
-	print('\nNOT IN COMPARE:\n')
+	print('\n### NOT_IN_COMPARE ###\n')
 	for n in COMPARE_OUT_FP:
 		print(n[0], n[1], n[2], n[3])
