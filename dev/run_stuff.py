@@ -81,7 +81,7 @@ for sampleName in sorted(fq_dict.keys()):
 	if haveData == False:
 		CMD += EXOGENE_SR + ' -f1 ' + r1_clean + ' -f2 ' + r2_clean + ' -r ' + REF_HVR38 + ' -o ' + exo_out + '\n'
 	#
-	if exists_and_is_nonZero(report_out) == False:
+	if True or exists_and_is_nonZero(report_out) == False:
 		CMD += COMBINE_REP + ' -ms 20 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
 		runCMD = True
 
