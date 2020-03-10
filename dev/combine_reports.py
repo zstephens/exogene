@@ -41,17 +41,22 @@ CENTROMERE_BUFF = 50000
 #
 
 def get_compare(c,p):
-	closest = None
-	minDist = -1
+	#closest = None
+	#minDist = -1
+	#for n in COMPARE:
+	#	if n[0] == c and abs(p-n[1]) < 1000:
+	#		if minDist < 0:
+	#			minDist = abs(p-n[1])
+	#			closest = n
+	#		elif abs(p-n[1]) < minDist:
+	#			minDist = abs(p-n[1])
+	#			closest = n
+	#return closest
+	outList = []
 	for n in COMPARE:
 		if n[0] == c and abs(p-n[1]) < 1000:
-			if minDist < 0:
-				minDist = abs(p-n[1])
-				closest = n
-			elif abs(p-n[1]) < minDist:
-				minDist = abs(p-n[1])
-				closest = n
-	return closest
+			outList.append(n)
+	return outList
 
 def isInBadRange(c,p):
 	for n in TELOMERE_HG38:
@@ -498,10 +503,11 @@ for i in order_to_process_clusters:
 			sc_fps = []
 			sc_anyHits = False
 			for scc_to_use in sc_coords_to_compare:
-				gc = get_compare(clustered_events[i][0][0], scc_to_use)
-				if gc != None:
-					COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent, abs(int(scm+0.5)-gc[1])))
+				gcl = get_compare(clustered_events[i][0][0], scc_to_use)
+				if len(gcl) > 0:
 					sc_anyHits = True
+					for gc in gcl:
+						COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent, abs(int(scm+0.5)-gc[1])))
 				else:
 					sc_fps.append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent))
 			if sc_anyHits == False and len(sc_fps):

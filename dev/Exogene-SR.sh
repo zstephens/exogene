@@ -2,7 +2,7 @@
 
 USAGE_1="Usage (bam): `basename $0` -b input.bam -r ref.fa -o output_dir/"
 USAGE_2="Usage (fq):  `basename $0` -f1 read1.fq.gz -f2 read2.fq.gz -r ref.fa -o output_dir/"
-USAGE_3="optional arguments: -k bwa_seed_size [40] -d duster_exclude_frac [50]"
+USAGE_3="optional arguments: -k bwa_seed_size [40] -d duster_exclude_frac [40]"
 
 #input argument parsing
 ARG_BAM=""
