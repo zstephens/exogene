@@ -12,7 +12,7 @@ OUT_QLOG = WORKING_DIR + 'qlog/'
 EMAIL    = 'stephens.zachary@mayo.edu'
 
 QUEUES  = ['1-hour', '1-day', '4-day', '7-day', '30-day']
-myQueue = '1-day'
+myQueue = '1-hour'
 
 PYTHON      = '/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
@@ -51,7 +51,7 @@ for sampleName in sorted(fq_dict.keys()):
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
 	#HEADER += '#$ -m ae' + '\n'
 	#HEADER += '#$ -M ' + EMAIL + '\n'
-	HEADER += '#$ -l h_vmem=32G ' + '\n'
+	HEADER += '#$ -l h_vmem=8G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
 
 	r1_clean = FQ_DIR + r1.split('/')[-1]
@@ -92,6 +92,6 @@ for sampleName in sorted(fq_dict.keys()):
 		os.system('qsub '+OUT_QSH+jobName+'.sh')
 	nProcessed += 1
 
-	if nProcessed >= 10:
+	if nProcessed >= 10000:
 		break
 
