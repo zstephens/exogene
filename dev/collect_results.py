@@ -30,6 +30,8 @@ for lDir in listing:
 				if startReading:
 					dat_out[lDir[8:]] += line
 			f.close()
+			if startReading == False:
+				print 'Warning:', lDir, 'has incomplete Integration_Summary.txt'
 		else:
 			print 'Warning:', lDir, 'has empty Integration_Summary.txt'
 	else:
