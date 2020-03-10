@@ -12,7 +12,16 @@ OUT_QLOG = WORKING_DIR + 'qlog/'
 EMAIL    = 'stephens.zachary@mayo.edu'
 
 QUEUES  = ['1-hour', '1-day', '4-day', '7-day', '30-day']
-myQueue = '1-hour'
+myQueue = '1-day'
+
+REPROCESS = ['SRR3104790',
+             'SRR3105065',
+             'SRR3104690',
+             'SRR3104827',
+             'SRR3105024',
+             'SRR3105064',
+             'SRR3104908',
+             'SRR3104834']
 
 PYTHON      = '/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
@@ -42,6 +51,9 @@ for sampleName in sorted(fq_dict.keys()):
 	if r1 == None or r2 == None:
 		continue
 	jobName = 'exogene_' + sampleName
+
+	if sampleName not in REPROCESS:
+		continue
 
 	HEADER  = ''
 	HEADER += '#!/bin/bash' + '\n'
