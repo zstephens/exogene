@@ -52,8 +52,8 @@ for sampleName in sorted(fq_dict.keys()):
 		continue
 	jobName = 'exogene_' + sampleName
 
-	if sampleName not in REPROCESS:
-		continue
+	#if sampleName not in REPROCESS:
+	#	continue
 
 	HEADER  = ''
 	HEADER += '#!/bin/bash' + '\n'
@@ -63,7 +63,7 @@ for sampleName in sorted(fq_dict.keys()):
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
 	#HEADER += '#$ -m ae' + '\n'
 	#HEADER += '#$ -M ' + EMAIL + '\n'
-	HEADER += '#$ -l h_vmem=8G ' + '\n'
+	HEADER += '#$ -l h_vmem=32G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
 
 	r1_clean = FQ_DIR + r1.split('/')[-1]

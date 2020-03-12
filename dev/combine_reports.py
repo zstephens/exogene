@@ -161,7 +161,7 @@ parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR 
 parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
 parser.add_argument('-o',  type=str, required=True,  metavar='<str>', help="* output_dir/")
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=1)
-parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs if no SC", default=5)
+parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
 args = parser.parse_args()
 
 # basic parameters
@@ -349,7 +349,7 @@ for k in data_byReadName.keys():
 							evidence_sc[i].append(None)
 						else:
 							evidence_sc[i].append(tuple([n for n in scDat]))
-						evidence_pe[i].append(tuple(bp_range1_left + bp_range1_right))
+						evidence_pe[i].append(tuple(bp_range1_left + bp_range1_right + [r1[3]]))
 						break
 				if found_a_hit:
 					break
@@ -359,7 +359,7 @@ for k in data_byReadName.keys():
 					evidence_sc.append([None])
 				else:
 					evidence_sc.append([tuple([n for n in scDat])])
-				evidence_pe.append([tuple(bp_range1_left + bp_range1_right)])
+				evidence_pe.append([tuple(bp_range1_left + bp_range1_right + [r1[3]])])
 				evidence_pb.append([])
 			#print('SUM:', len(clustered_events), sum([len(n) for n in clustered_events]))
 
@@ -455,6 +455,7 @@ for i in order_to_process_clusters:
 	sc_count = {}
 	sc_mapq_byPos = {}
 	pe_count = {}
+	pe_mapq_byPos = {}
 	pe_to_report_stratified = []
 	if i < len(evidence_sc):
 		for n in evidence_sc[i]:
@@ -468,15 +469,18 @@ for i in order_to_process_clusters:
 			for j in range(n[0],n[1]+1)+range(n[2],n[3]+1):
 				if j not in pe_count:
 					pe_count[j] = 0
+					pe_mapq_byPos[j] = []
 				pe_count[j] += 1
+				pe_mapq_byPos[j].append(n[4])
 
 	mySCCount = 0
 	myPECount = 0
 	if not len(sc_count):
 		sc_to_report = None
 		max_sc       = 0
-	else:
+		sc_str       = ''
 
+	else:
 		sc_coord_list = [[k]*sc_count[k] for k in sc_count.keys()]
 		sc_coord_list = [item for sublist in sc_coord_list for item in sublist]
 		if len(sc_coord_list) > 1:
@@ -491,11 +495,10 @@ for i in order_to_process_clusters:
 			scm = sc_coord_list[0]
 			scl = [-1]
 
-		mapq0_percent = 'N/A'
-		if scm in sc_mapq_byPos:
-			mapq0_frac = float(sc_mapq_byPos[scm].count(0))/len(sc_mapq_byPos[scm])
-			mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
-			sc_str += ', MAPQ=0: ' + mapq0_percent
+		scm_closest   = sorted([(abs(scm-k_sc), k_sc) for k_sc in sc_mapq_byPos.keys()])[0][1]
+		mapq0_frac    = float(sc_mapq_byPos[scm_closest].count(0))/len(sc_mapq_byPos[scm_closest])
+		mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
+		sc_str += ', MAPQ=0: ' + mapq0_percent
 
 		if (len(args.c) or len(COMPARE)) and len(scl) >= MIN_SOFTCLIP:
 			#sc_str += ' closest: ' + str(get_compare(clustered_events[i][0][0], int(scm+0.5)))
@@ -507,7 +510,7 @@ for i in order_to_process_clusters:
 				if len(gcl) > 0:
 					sc_anyHits = True
 					for gc in gcl:
-						COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent, abs(int(scm+0.5)-gc[1])))
+						COMPARE_OUT[gc].append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent, abs(int(scc_to_use+0.5)-gc[1]), 'SOFTCLIP'))
 				else:
 					sc_fps.append((clustered_events[i][0][0], scc_to_use, str(sc_count[scc_to_use])+'/'+str(len(scl)), mapq0_percent))
 			if sc_anyHits == False and len(sc_fps):
@@ -527,6 +530,8 @@ for i in order_to_process_clusters:
 	if not len(pe_count):
 		pe_to_report = None
 		max_pe       = 0
+		pe_str       = ''
+
 	else:
 		max_pe = max(pe_count.values())
 		threshes = [n*(max_pe/POLY_PE_STEPS) for n in xrange(POLY_PE_STEPS)] + [max_pe-1]
@@ -546,14 +551,32 @@ for i in order_to_process_clusters:
 		pe_to_report_stratified = [sorted_coord_list_to_ranges(n) for n in pe_to_report_stratified]
 		#mpl.figure(6)
 		#mpl.plot(pe_to_report, pe_density)
-		#mpl.show()
+		#mpl.savefig('debug.png')
+		#exit(1)
+
+		if (len(args.c) or len(COMPARE)) and myPECount >= MIN_DISC_ONLY:
+			pe_coords_to_compare = sorted_coord_list_to_ranges([pe_to_report[n] for n in xrange(len(pe_to_report)) if pe_density[n] >= POLY_PE_STEPS-1])
+			pe_coords_to_compare = [int(np.mean(n)+0.5) for n in pe_coords_to_compare]
+			for pem in pe_coords_to_compare:
+				mapq0_percent = 'N/A'
+				if pem in pe_mapq_byPos:
+					mapq0_frac    = float(pe_mapq_byPos[pem].count(0))/len(pe_mapq_byPos[pem])
+					mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
+				myPECount_2 = myPECount
+				if pem in pe_count:
+					myPECount_2 = pe_count[pem]
+
+				gcl = get_compare(clustered_events[i][0][0], pem)
+				if len(gcl) > 0:
+					for gc in gcl:
+						COMPARE_OUT[gc].append((clustered_events[i][0][0], pem, str(myPECount_2)+'/'+str(myPECount), mapq0_percent, abs(pem-gc[1]), 'DISCORDANT'))
+				#print('PEM:', pem, mapq0_percent)
+
 		pe_to_report = sorted_coord_list_to_ranges(pe_to_report)
 
 	# read support filters
 	if len(evidence_pb[i]) == 0:
-		if max_sc < MIN_SOFTCLIP:
-			continue
-		if max_pe < MIN_DISC_ONLY:
+		if max_sc < MIN_SOFTCLIP and max_pe < MIN_DISC_ONLY:
 			continue
 	else:
 		ccs_coord_list = [n[0] for n in evidence_pb[i] if n[1] == 'CCS']
@@ -744,10 +767,11 @@ if len(args.c) or len(COMPARE):
 			anno = [isInBadRange(n[0],n[1])*'gap', BED_TRACKS[2][1].query(n[0],n[1])*'repeats', BED_TRACKS[3][1].query(n[0],n[1])*'mappability', BED_TRACKS[4][1].query(n[0],n[1])*'exclude']
 			print('MISS\t' + str(n) + '\t' + ', '.join([m for m in anno if len(m)]))
 		else:
-			s1 = ' '.join([str(m) for m in COMPARE_OUT[n][0][0:5]])
+			min_distance_co_item = sorted([(COMPARE_OUT[n][i][4], i) for i in xrange(len(COMPARE_OUT[n]))])[0][1]
+			s1 = ' '.join([str(m) for m in COMPARE_OUT[n][min_distance_co_item][0:6]])
 			s2 = str(n)
-			s3 = str(COMPARE_OUT[n])
-			print('HIT\t' + s1 + '\t' + s2 + '\t' + s3)
+			#s3 = str(COMPARE_OUT[n])
+			print('HIT\t' + s1 + '\t' + s2)
 	print('\n### NOT_IN_COMPARE ###\n')
 	for n in COMPARE_OUT_FP:
 		print(n[0], n[1], n[2], n[3])
