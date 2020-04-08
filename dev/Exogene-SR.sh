@@ -60,29 +60,35 @@ if [ "$ARG_OUT" == "" ]; then
   exit 1
 fi
 
-# references and tools
+# exes
 samtools=/opt/conda/envs/samtools/bin/samtools
-HVR=/home/resources/refs/HumanViral_Reference_12-12-2018.fa
-RNA=/home/resources/refs/GRCh38_RNA_Reference_4-30-2019.fa
-Decoy=/home/resources/refs/GRCh38_Decoy_Reference_4-30-2019.fa
 bwa=/opt/conda/envs/bwa/bin/bwa
 perl=/usr/bin/perl
 duster=/opt/conda/envs/blast/bin/dustmasker
 awk=/usr/bin/awk
-ExcludeRegions=/home/resources/bed/Merged_ExcludeRegions.bed
-Genes1KB=/home/resources/bed/HG38_ProteinCoding-1KB.bed
-GenesGS=/home/resources/bed/HG38_ProteinCoding-GS.bed
-GenesGSs=/home/resources/bed/HG38_ProteinCoding-GS_sort.bed
-ViralKey=/home/resources/HumanViral_Reference_12-12-2018.key
-ViralAcc=/home/resources/HumanViral_Reference_12-12-2018.accessions
 closestbed=/opt/conda/envs/bedtools/bin/closestBed
 intersectbed=/opt/conda/envs/bedtools/bin/intersectBed
 clusterbed=/opt/conda/envs/bedtools/bin/clusterBed
 mergeBed=/opt/conda/envs/bedtools/bin/mergeBed
 sortBed=/opt/conda/envs/bedtools/bin/sortBed
-readlist_to_fq="python /home/scripts/readlist_2_fq.py"
-readlist_to_fq_bam="python /home/scripts/readlist_2_fq_from_bam.py"
-viralreads_to_report="python /home/scripts/createViralReadsReport.py"
+
+# scripts
+readlist_to_fq="python /home/exogene/dev/readlist_2_fq.py"
+readlist_to_fq_bam="python /home/exogene/dev/readlist_2_fq_from_bam.py"
+viralreads_to_report="python /home/exogene/dev/createViralReadsReport.py"
+
+# refs
+HVR=/home/refs/HumanViral_Reference_12-12-2018.fa
+RNA=/home/refs/GRCh38_RNA_Reference_4-30-2019.fa
+Decoy=/home/refs/GRCh38_Decoy_Reference_4-30-2019.fa
+
+# other resources
+ExcludeRegions=/home/exogene/dev/resources/Merged_ExcludeRegions.bed
+Genes1KB=/home/exogene/dev/resources/HG38_ProteinCoding-1KB.bed
+GenesGS=/home/exogene/dev/resources/HG38_ProteinCoding-GS.bed
+GenesGSs=/home/exogene/dev/resources/HG38_ProteinCoding-GS_sort.bed
+ViralKey=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018.key
+ViralAcc=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018.accessions
 
 if [ "$INPUT_MODE" == "bam" ]; then
   # check input bam file path

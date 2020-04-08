@@ -110,15 +110,18 @@ else
   exit 1
 fi
 
-# references and tools
+# exes
 samtools=/opt/conda/envs/samtools/bin/samtools
 pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
 pbsv=/opt/conda/envs/pbmm2/bin/pbsv
-viral_db_json=/home/resources/HumanViral_Reference_12-12-2018_simpleNames.json
 
-grep_virus="python /home/scripts/grep_virus_from_sam.py"
-gen_report="python /home/scripts/plot_viral_long_reads.py"
-vcf_to_fa="python /home/scripts/vcf_2_insfa.py"
+# scripts
+grep_virus="python /home/exogene/dev/grep_virus_from_sam.py"
+gen_report="python /home/exogene/dev/plot_viral_long_reads.py"
+vcf_to_fa="python /home/exogene/dev/vcf_2_insfa.py"
+
+# resources
+viral_db_json=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
 
 mkdir -p $ARG_OUT
 cd $ARG_OUT
