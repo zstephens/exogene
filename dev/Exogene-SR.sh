@@ -62,9 +62,9 @@ fi
 
 # exes
 samtools=/opt/conda/envs/samtools/bin/samtools
-bwa=/opt/conda/envs/bwa/bin/bwa
+bwa=/usr/bin/bwa
 perl=/usr/bin/perl
-duster=/opt/conda/envs/blast/bin/dustmasker
+duster=/usr/bin/dustmasker
 awk=/usr/bin/awk
 closestbed=/opt/conda/envs/bedtools/bin/closestBed
 intersectbed=/opt/conda/envs/bedtools/bin/intersectBed
