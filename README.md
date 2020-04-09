@@ -74,6 +74,27 @@ Either -s or -l must be specified (or both, for a combined report). Viral_Reads_
 
 The Docker container contains a small quantity of test data which can be processed as follows:
 
+`./Exogene-SR.sh \ `
+`    -f1 /home/test_data/SRR3104446_1.fq.gz \ `
+`    -f2 /home/test_data/SRR3104446_2.fq.gz \ `
+`    -r /path/to/hg38_and_viral.fa \ `
+`    -o /path/to/out_SR/ `
 
+`python combine_reports.py \ `
+`    -s /path/to/out_SR/Viral_Reads_Report.tsv \ `
+`    -o /path/to/out_SR/plots/ \ `
+`    -ms 20 \ `
+`    -md 20 \ `
+`    -c SRR3104446 `
+
+`./Exogene-LR.sh \ `
+`    -f -f /home/test_data/a1el_ccs.fq.gz \ `
+`    -r /path/to/hg38_and_viral.fa \ `
+`    -m hifi \ `
+`    -o /path/to/out_LR/ `
+
+`python combine_reports.py \ `
+`    -l /path/to/out_LR/Viral_Junctions_LongReads.tsv \ `
+`    -o /path/to/out_LR/plots/ `
 
 For the included hg38+viral reference, ~32GB of memory are required for the bwa/pbmm2 alignment steps.
