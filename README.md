@@ -70,7 +70,7 @@ input FASTQ files must be gzipped, and readnames must end with either "/1" or "/
 
 Either -s or -l must be specified (or both, for a combined report). Viral_Reads_Report.tsv is created in the output directory of Exogene-SR, Viral_Junctions_LongReads.tsv is created in the output directory of Exogene-LR.
 
-### Output Report Description:
+### Test Data:
 
 The Docker container contains a small quantity of test data which can be processed as follows:
 
