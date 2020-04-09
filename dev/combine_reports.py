@@ -168,7 +168,7 @@ args = parser.parse_args()
 (IN_SHORT, IN_LONG, OUT_DIR) = (args.s, args.l, args.o)
 
 VOI = args.v
-VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
+#VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
 
 if IN_SHORT == '' and IN_LONG == '':
 	print('Must specify either -s or -l')
@@ -240,6 +240,11 @@ MAX_LONG_READ_GAP  = 1000		# skip human --> viral junctions that have more than 
 MIN_SOFTCLIP       = args.ms
 MIN_DISC_ONLY      = args.md	# if discordant reads are our only source of evidence, demand we have at least this many
 
+clustered_events = []
+evidence_sc      = []	# softclip
+evidence_pe      = []	# discordant paired-end reads
+evidence_pb      = []	# pacbio
+
 #
 #	PARSE SHORT READS REPORT
 #
@@ -299,69 +304,65 @@ if len(IN_SHORT):
 		tlen_std  = 50
 	print('tlen:', tlen_mean, tlen_std)
 
-# cluster reads by event
-clustered_events = []
-evidence_sc      = []	# softclip
-evidence_pe      = []	# discordant paired-end reads
-evidence_pb      = []	# pacbio
-for k in data_byReadName.keys():
-	# only read pairs where both passed filters...
-	if len(data_byReadName[k]) == 2:
-		# human - virus only
-		if sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 1:
+	# cluster reads by event
+	for k in data_byReadName.keys():
+		# only read pairs where both passed filters...
+		if len(data_byReadName[k]) == 2:
+			# human - virus only
+			if sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 1:
 
-			# sort pairs such that read 1 is mapped to human
-			if data_byReadName[k][0][0] in HUMAN_CHR:
-				[r1, r2] = data_byReadName[k]
-			else:
-				[r2, r1] = data_byReadName[k]
-
-			# collapse viral reference ids to common name
-			if r2[0] in ID_TO_ACCESSION:
-				r2[0] = ID_TO_ACCESSION[r2[0]]
-			if r2[0] in ACCESSION_TO_TAXONOMY:
-				r2[0] = ACCESSION_TO_TAXONOMY[r2[0]]
-			#print('--',[r1,r2])
-
-			# softclip evidence
-			sc1 = parse_cigar_for_softclip(r1)
-			sc2 = parse_cigar_for_softclip(r2)
-			scDat = None
-			if sc1[0] > 0:
-				scDat = [r1[0], sc1[1], sc1[0], r1[3]]
-
-			# paired-end evidence
-			span1 = parse_cigar_for_match(r1)
-			span2 = parse_cigar_for_match(r2)
-			bp_range1_left  = [max([0, r1[1] - tlen_mean - tlen_std + span1 + span2]), r1[1]]
-			bp_range1_right = [r1[1] + span1, r1[1] + tlen_mean + tlen_std - span2]
-			#print('--',[bp_range1_left, bp_range1_right])
-
-			# closest-point hierarchal clustering
-			myJunction = [r1[0], r2[0], r1[1], r1[1] + span1]
-			found_a_hit = False
-			for i in xrange(len(clustered_events)):
-				for j in xrange(len(clustered_events[i])):
-					found_a_hit = close_enough(myJunction, clustered_events[i][j])
-					if found_a_hit:
-						clustered_events[i].append([n for n in myJunction])
-						if scDat == None:
-							evidence_sc[i].append(None)
-						else:
-							evidence_sc[i].append(tuple([n for n in scDat]))
-						evidence_pe[i].append(tuple(bp_range1_left + bp_range1_right + [r1[3]]))
-						break
-				if found_a_hit:
-					break
-			if not found_a_hit:
-				clustered_events.append([[n for n in myJunction]])
-				if scDat == None:
-					evidence_sc.append([None])
+				# sort pairs such that read 1 is mapped to human
+				if data_byReadName[k][0][0] in HUMAN_CHR:
+					[r1, r2] = data_byReadName[k]
 				else:
-					evidence_sc.append([tuple([n for n in scDat])])
-				evidence_pe.append([tuple(bp_range1_left + bp_range1_right + [r1[3]])])
-				evidence_pb.append([])
-			#print('SUM:', len(clustered_events), sum([len(n) for n in clustered_events]))
+					[r2, r1] = data_byReadName[k]
+
+				# collapse viral reference ids to common name
+				if r2[0] in ID_TO_ACCESSION:
+					r2[0] = ID_TO_ACCESSION[r2[0]]
+				if r2[0] in ACCESSION_TO_TAXONOMY:
+					r2[0] = ACCESSION_TO_TAXONOMY[r2[0]]
+				#print('--',[r1,r2])
+
+				# softclip evidence
+				sc1 = parse_cigar_for_softclip(r1)
+				sc2 = parse_cigar_for_softclip(r2)
+				scDat = None
+				if sc1[0] > 0:
+					scDat = [r1[0], sc1[1], sc1[0], r1[3]]
+
+				# paired-end evidence
+				span1 = parse_cigar_for_match(r1)
+				span2 = parse_cigar_for_match(r2)
+				bp_range1_left  = [max([0, r1[1] - tlen_mean - tlen_std + span1 + span2]), r1[1]]
+				bp_range1_right = [r1[1] + span1, r1[1] + tlen_mean + tlen_std - span2]
+				#print('--',[bp_range1_left, bp_range1_right])
+
+				# closest-point hierarchal clustering
+				myJunction = [r1[0], r2[0], r1[1], r1[1] + span1]
+				found_a_hit = False
+				for i in xrange(len(clustered_events)):
+					for j in xrange(len(clustered_events[i])):
+						found_a_hit = close_enough(myJunction, clustered_events[i][j])
+						if found_a_hit:
+							clustered_events[i].append([n for n in myJunction])
+							if scDat == None:
+								evidence_sc[i].append(None)
+							else:
+								evidence_sc[i].append(tuple([n for n in scDat]))
+							evidence_pe[i].append(tuple(bp_range1_left + bp_range1_right + [r1[3]]))
+							break
+					if found_a_hit:
+						break
+				if not found_a_hit:
+					clustered_events.append([[n for n in myJunction]])
+					if scDat == None:
+						evidence_sc.append([None])
+					else:
+						evidence_sc.append([tuple([n for n in scDat])])
+					evidence_pe.append([tuple(bp_range1_left + bp_range1_right + [r1[3]])])
+					evidence_pb.append([])
+				#print('SUM:', len(clustered_events), sum([len(n) for n in clustered_events]))
 
 #
 #	PARSE LONG READ EVENTS

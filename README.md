@@ -6,15 +6,15 @@ A workflow for detecting viral integrations from both short read and long read s
 ----
 ## usage
 
-`docker pull exogene_v1`
+`docker pull exogene_v1.2`
 
-`docker run -it -v ${HOME}:${HOME} exogene_v1`
+`docker run -it -v ${HOME}:${HOME} exogene_v1.2`
 
 ### Create human + viral reference sequence:
 
 (from inside the container)
 
-`/home/scripts/init_ref.sh \ `  
+`/home/init_ref.sh \ `  
 `    -i /path/to/hg38.fa \ `  
 `    -o /path/to/hg38_plus_viral.fa`  
 
@@ -61,7 +61,7 @@ input FASTQ files must be gzipped, and readnames must end with either "/1" or "/
 
 ### Intersecting Exogene-SR and Exogene-LR results:
 
-`python /home/scripts/combine_reports.py \`  
+`python /home/combine_reports.py \`  
 `    -s Viral_Reads_Report.tsv \ `  
 `    -l Viral_Junctions_LongReads.tsv \ `  
 `    -o combined_report_outDir/ \ `  
@@ -72,14 +72,8 @@ Either -s or -l must be specified (or both, for a combined report). Viral_Reads_
 
 ### Output Report Description:
 
-**Exogene-SR:**
+The Docker container contains a small quantity of test data which can be processed as follows:
 
-* TBD
 
-**Exogene-LR:**
 
-* TBD
-
-**Combined Reports:**
-
-* TBD
+For the included hg38+viral reference, ~32GB of memory are required for the bwa/pbmm2 alignment steps.
