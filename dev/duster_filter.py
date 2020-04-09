@@ -3,7 +3,7 @@ import json
 
 # dustmasker -in reads.fa -outfmt acclist | python duster_filter.py max_thresh duster.out duster.retain duster.remove
 
-THRESH   = int(sys.argv[1])
+THRESH   = int(float(sys.argv[1]))
 F_OUT    = sys.argv[2]
 F_RETAIN = sys.argv[3]
 F_REMOVE = sys.argv[4]
