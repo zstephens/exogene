@@ -746,8 +746,10 @@ print('=== BREAKPOINT DEVIATIONS:')
 if len(IN_SHORT):
 	print('short:', np.mean(bp_dev_sc))
 if len(IN_LONG):
-	print('ccs:  ', np.mean(bp_dev_ccs))
-	print('clr:  ', np.mean(bp_dev_clr))
+	if len(bp_dev_ccs):
+		print('ccs:  ', np.mean(bp_dev_ccs))
+	if len(bp_dev_clr):
+		print('clr:  ', np.mean(bp_dev_clr))
 
 kv = sorted([(class_counts[k],k) for k in class_counts.keys()], reverse=True)
 for n in kv:
