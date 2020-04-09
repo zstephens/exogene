@@ -97,4 +97,4 @@ The Docker container contains a small quantity of test data which can be process
 `    -l /path/to/out_LR/Viral_Junctions_LongReads.tsv \ `  
 `    -o /path/to/out_LR/plots/ `  
 
-For the included hg38+viral reference, ~32GB of memory are required for the bwa/pbmm2 alignment steps.
+For the included hg38+viral reference, the bwa/pbmm2 alignment steps require ~32GB of memory.

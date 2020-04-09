@@ -73,6 +73,7 @@ mergeBed=/opt/conda/envs/bedtools/bin/mergeBed
 sortBed=/opt/conda/envs/bedtools/bin/sortBed
 
 # scripts
+duster_filt="python /home/exogene/dev/duster_filter.py"
 readlist_to_fq="python /home/exogene/dev/readlist_2_fq.py"
 readlist_to_fq_bam="python /home/exogene/dev/readlist_2_fq_from_bam.py"
 viralreads_to_report="python /home/exogene/dev/createViralReadsReport.py"
@@ -163,9 +164,7 @@ fi
 # run blast duster
 if [ ! -f viral_reads_se.ids.cleaned ]; then
   read_len_25p=`echo "0.${ARG_DUSTER_FRAC}*$((len-1))" | bc`
-  $duster -in viral_reads_se.fa -outfmt acclist | sed 's/>//g' | $sortBed | $mergeBed | $perl -lane '$math=$F[2]-$F[1];print"$math\t$F[0]";' | $awk '{if(last && $2 != last) {print sum,"\t",last;sum=0}sum=sum+$1;last=$2} END {print sum,"\t",last}' | sed s/' '//g > duster.out
-  export read_len_25p=$read_len_25p; $perl -lane 'if($F[0]>$ENV{read_len_25p}){print"$F[1]"};' duster.out | sort | uniq  > duster.remove
-  cut -f2 duster.out | cat - duster.remove | sort | uniq -u > duster.retain
+  $duster -in viral_reads_se.fa -outfmt acclist | $duster_filt $read_len_25p duster.out duster.retain duster.remove
   cat duster.remove viral_reads_se.ids | sort | uniq -u > viral_reads_se.ids.cleaned
   cat duster.retain viral_reads_se.ids.cleaned | sort | uniq > viral_reads_se.keep
   echo "repeats evaluated" >> software.log
