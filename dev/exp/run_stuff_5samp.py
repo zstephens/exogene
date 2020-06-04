@@ -49,7 +49,7 @@ def exists_and_is_nonZero(fn):
 	return False
 
 for i in xrange(len(SAMPLES)):
-	listing = [n for n in os.listdir(BAM_DIR+SAMPLES[i]+'/') if n[-4:] == '.bam']
+	listing = [n for n in os.listdir(BAM_DIR+SAMPLES[i][0]+'/') if n[-4:] == '.bam']
 	if len(listing) and exists_and_is_nonZero(listing[0]):
 		myBam = BAM_DIR+SAMPLES[i][0]+'/'+listing[0]
 	else:
