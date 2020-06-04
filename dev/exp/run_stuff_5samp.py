@@ -81,7 +81,7 @@ for i in xrange(len(SAMPLES)):
 	f.write(HEADER+'\n'+CMD+'\n')
 	f.close()
 	print OUT_QSH+jobName+'.sh'
-	#os.system('qsub '+OUT_QSH+jobName+'.sh')
+	os.system('qsub '+OUT_QSH+jobName+'.sh')
 
 
 
