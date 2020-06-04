@@ -76,12 +76,11 @@ for i in xrange(len(SAMPLES)):
 	CMD += EXOGENE_SR + ' -b ' + myBam + ' -r ' + REF_HVR38 + ' -o ' + exo_out + '\n'
 	CMD += COMBINE_REP + ' -ms 2 -s ' + reads_report + ' -o ' + plots_out + ' > ' + report_out + '\n'
 
-	if runCMD:
-		f = open(OUT_QSH+jobName+'.sh', 'w')
-		f.write(HEADER+'\n'+CMD+'\n')
-		f.close()
-		print OUT_QSH+jobName+'.sh'
-		#os.system('qsub '+OUT_QSH+jobName+'.sh')
+	f = open(OUT_QSH+jobName+'.sh', 'w')
+	f.write(HEADER+'\n'+CMD+'\n')
+	f.close()
+	print OUT_QSH+jobName+'.sh'
+	#os.system('qsub '+OUT_QSH+jobName+'.sh')
 
 
 
