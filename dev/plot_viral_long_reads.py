@@ -1,3 +1,5 @@
+import os
+import sys
 import re
 import argparse
 
@@ -41,6 +43,16 @@ def parse_cigar(cigar):
 			radj += numbers[i]
 	return (startPos, adj, radj, endClip)
 
+def exists_and_is_nonZero(fn):
+	if os.path.isfile(fn):
+		if os.path.getsize(fn) > 0:
+			return True
+	return False
+
+def makedir(d):
+	if not os.path.isdir(d):
+		os.system('mkdir '+d)
+
 """//////////////////////////////////////////////////
 ////////////    PARSE INPUT ARGUMENTS    ////////////
 //////////////////////////////////////////////////"""
@@ -55,10 +67,11 @@ OUT_REPORT = args.o
 OUT_DIR    = args.p
 if OUT_DIR[-1] != '/':
 	OUT_DIR += '/'
+makedir(OUT_DIR)
 
 # [readpos_start, readpos_end, ref, pos_start, pos_end, orientation, mapq]
 ALIGNMENTS_BY_RNAME = {}
-
+READDAT_BY_RNAME = {}
 READLEN_BY_RNAME = {}
 
 f = open(args.s, 'r')
@@ -93,6 +106,7 @@ for line in f:
 		pos1, pos2 = pos + cigDat[1], pos
 	ALIGNMENTS_BY_RNAME[rnm].append([readPos1, readPos2, ref, pos1, pos2, orientation, mapq])
 
+	READDAT_BY_RNAME[rnm] = rdat
 	READLEN_BY_RNAME[rnm] = max([READLEN_BY_RNAME[rnm], readLen])
 f.close()
 
@@ -105,7 +119,8 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 #
 #
 #
-f_out = open(OUT_REPORT,'w')
+f_out  = open(OUT_REPORT,'w')
+f_out2 = open(OUT_DIR+'viral_sequences.fa','w')
 nPlot  = 1
 for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 	#print k
@@ -128,6 +143,33 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 				outStr = k + '\t' + n[2] + ':' + str(n[4]) + '\t' + abns_k[i+1][2] + ':' + str(abns_k[i+1][3])
 				f_out.write(outStr + '\t' + qc1 + '\t' + qc2 + '\t' + qc3 + '\n')
 	#print ''
+	
+	viral_spans = []
+	for i in xrange(len(abns_k)):
+		n = abns_k[i]
+		if n[2] not in HUMAN_CHR:
+			if len(viral_spans) == 0:
+				viral_spans.append([i])
+			else:
+				if i == viral_spans[-1][-1]+1:
+					viral_spans[-1].append(i)
+				else:
+					viral_spans.append([i])
+	print abns_k
+	print viral_spans
+	print ''
+	for n in viral_spans:
+		(anchored_left, anchored_right) = (False, False)
+		if n[0] > 0:
+			anchored_left = True
+		if n[-1] < len(abns_k)-1:
+			anchored_right = True
+		myAnchor = 'l'*anchored_left+'r'*anchored_right
+		seq_name = '-'.join([abns_k[m][2] for m in n]) + '_' + '-'.join([str(m) for m in n]) +'_' + k + '_' + myAnchor
+		seq_dat  = READDAT_BY_RNAME[k][abns_k[n[0]][0]:abns_k[n[-1]][1]]
+		if len(seq_dat) >= 400:
+			f_out2.write('>'+seq_name+'\n')
+			f_out2.write(seq_dat+'\n')
 
 	BN = -0.05 * READLEN_BY_RNAME[k]
 	BP =  0.05 * READLEN_BY_RNAME[k]
@@ -143,9 +185,9 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 		p_alpha.append(float(n[6]+15.)/(60.+15.))
 
 		if 'virus' in n[2]:
-			p_color.append('tab:red')
+			p_color.append('red')
 		else:
-			p_color.append('tab:blue')
+			p_color.append('blue')
 
 		delta_pointy     = 0.8*(n[1]-n[0])
 		delta_pointy_rev = 0.2*(n[1]-n[0])
@@ -180,4 +222,5 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 	nPlot += 1
 	mpl.close(fig)
 
+f_out2.close()
 f_out.close()
