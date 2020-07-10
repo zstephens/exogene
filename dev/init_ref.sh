@@ -26,7 +26,7 @@ if [ "$ARG_OUT" == "" ]; then
 fi
 
 bwa=/opt/conda/envs/bwa/bin/bwa
-HVR=/home/resources/refs/HumanViral_Reference_12-12-2018.fa
+HVR=/home/refs/HumanViral_Reference_12-12-2018.fa
 
 cat $ARG_REF $HVR > $ARG_OUT
 $bwa index $ARG_OUT

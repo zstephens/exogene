@@ -200,7 +200,7 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   $samtools view -Sb ${name}_viral.sam > ${name}_viral.bam
   $samtools index ${name}_viral.bam
   rm Viral.bam bad.lis* ${name}_viral.sam
-  echo "evaluated viral integration sites into the human genome(HG38)" >> software.log
+  echo "evaluated viral integration sites into the human genome (hg38)" >> software.log
   date >> software.log
 fi
 
