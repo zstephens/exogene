@@ -254,6 +254,7 @@ if len(IN_SHORT):
 	f = open(IN_SHORT,'r')
 	isFirst = True
 	data_byReadName = {}
+	altc_byReadName = {}
 	readLens = []
 	for line in f:
 		if isFirst:
@@ -290,8 +291,7 @@ if len(IN_SHORT):
 		# alternate cigar
 		if splt[ind_altc] != '-':
 			splt2 = splt[ind_altc].split('_')
-			print(data_byReadName[myName], splt2)
-			exit(1)
+			altc_byReadName[myName] = [splt2[0], int(splt2[1]), splt2[3], int(splt2[2])]
 
 	f.close()
 
@@ -337,6 +337,8 @@ if len(IN_SHORT):
 				scDat = None
 				if sc1[0] > 0:
 					scDat = [r1[0], sc1[1], sc1[0], r1[3]]
+				if k in altc_byReadName:
+					print(scDat, altc_byReadName[k])
 
 				# paired-end evidence
 				span1 = parse_cigar_for_match(r1)
