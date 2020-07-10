@@ -266,6 +266,7 @@ if len(IN_SHORT):
 			ind_seq   = splt.index('R1_Seq')
 			ind_mapq  = splt.index('R1_MAPQ')
 			r2_offset = 7
+			ind_altc  = splt.index('alt_cigar')
 			continue
 
 		splt   = line.strip().split('\t')
@@ -286,6 +287,12 @@ if len(IN_SHORT):
 		myCig  = splt[ind_cigar+r2_offset]
 		myMapQ = int(splt[ind_mapq+r2_offset])
 		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
+		# alternate cigar
+		if splt[ind_altc] != '-':
+			splt2 = splt[ind_altc].split('_')
+			print data_byReadName[myName], splt2
+			exit(1)
+
 	f.close()
 
 	# tlen stats (for use in estimating breakpoint from discordant paired-end evidence)
