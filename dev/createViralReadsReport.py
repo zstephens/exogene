@@ -97,16 +97,13 @@ for k in sorted(outDat_by_rName.keys()):
 			if mateHuman == False:
 				candidates = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
 			else:
-				human_cig  = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
-				print 'mate:', outDat_by_rName[k][goodMate]
-				print human_cig
 				candidates = [n for n in outDat_by_rName[k][indM] if not(n[1] in HUMAN_CHR)]
 				# check for the case we are multimapped and choosing to use the viral read as our
 				# primary alignment because our mate is mapped to human. But don't throw away possible
 				# clipping information from the alignment we are down-grading to supplementary!
 				human_cig  = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
 				if len(human_cig) == 1:
-					alt_cigar = '_'.join(human_cig[1:5])
+					alt_cigar = '_'.join(human_cig[0][1:5])
 
 			if len(candidates) == 1:
 				outDat_by_rName[k][indM] = [candidates[0]]
