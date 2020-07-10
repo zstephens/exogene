@@ -290,7 +290,7 @@ if len(IN_SHORT):
 		# alternate cigar
 		if splt[ind_altc] != '-':
 			splt2 = splt[ind_altc].split('_')
-			print data_byReadName[myName], splt2
+			print(data_byReadName[myName], splt2)
 			exit(1)
 
 	f.close()
