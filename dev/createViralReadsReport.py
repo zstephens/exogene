@@ -51,9 +51,11 @@ f.close()
 f  = open(OUT_R, 'w')
 f2 = open(OUT_R+'.multimapped', 'w')
 f.write('R1_ID\tR1_Contig\tR1_Pos\tR1_MAPQ\tR1_CIGAR\tR1_Seq\tR1_RefName\t')
-f.write('R2_ID\tR2_Contig\tR2_Pos\tR2_MAPQ\tR2_CIGAR\tR2_Seq\tR2_RefName\n')
+f.write('R2_ID\tR2_Contig\tR2_Pos\tR2_MAPQ\tR2_CIGAR\tR2_Seq\tR2_RefName\talt_cigar\n')
 for k in sorted(outDat_by_rName.keys()):
 	if len(outDat_by_rName[k][0]) and len(outDat_by_rName[k][1]):
+
+		alt_cigar = '-'
 
 		# if both reads are multi-mapped...
 		if len(outDat_by_rName[k][0]) >= 2 and len(outDat_by_rName[k][1]) >= 2:
@@ -99,6 +101,13 @@ for k in sorted(outDat_by_rName.keys()):
 				print 'mate:', outDat_by_rName[k][goodMate]
 				print human_cig
 				candidates = [n for n in outDat_by_rName[k][indM] if not(n[1] in HUMAN_CHR)]
+				# check for the case we are multimapped and choosing to use the viral read as our
+				# primary alignment because our mate is mapped to human. But don't throw away possible
+				# clipping information from the alignment we are down-grading to supplementary!
+				human_cig  = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
+				if len(human_cig) == 1:
+					alt_cigar = '_'.join(human_cig[1:5])
+
 			if len(candidates) == 1:
 				outDat_by_rName[k][indM] = [candidates[0]]
 			else:
@@ -109,6 +118,6 @@ for k in sorted(outDat_by_rName.keys()):
 				continue
 
 		outDat_by_rName[k] = [outDat_by_rName[k][0][0], outDat_by_rName[k][1][0]]
-		f.write('\t'.join(outDat_by_rName[k][0]) + '\t' + '\t'.join(outDat_by_rName[k][1]) + '\n')
+		f.write('\t'.join(outDat_by_rName[k][0]) + '\t' + '\t'.join(outDat_by_rName[k][1]) + '\t' + alt_cigar + '\n')
 f2.close()
 f.close()
