@@ -152,6 +152,7 @@ def exists_and_is_nonZero(fn):
 
 
 parser = argparse.ArgumentParser(description='combine_reports.py')
+parser.add_argument('-o',  type=str, required=True,  metavar='<str>', help="* output_dir/")
 parser.add_argument('-s',  type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
 parser.add_argument('-l',  type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
 parser.add_argument('-v',  type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
@@ -159,7 +160,6 @@ parser.add_argument('-v1', type=str, required=False, metavar='<str>', help="viru
 parser.add_argument('-v2', type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
 parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
 parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
-parser.add_argument('-o',  type=str, required=True,  metavar='<str>', help="* output_dir/")
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=1)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
 args = parser.parse_args()
@@ -302,7 +302,7 @@ if len(IN_SHORT):
 		print('We were unable to grab template length stats from bwa.log, making a complete guess...')
 		tlen_mean = 350
 		tlen_std  = 50
-	print('tlen:', tlen_mean, tlen_std)
+	print('estimated template length:', tlen_mean, tlen_std)
 
 	# cluster reads by event
 	for k in data_byReadName.keys():
