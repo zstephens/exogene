@@ -95,6 +95,9 @@ for k in sorted(outDat_by_rName.keys()):
 			if mateHuman == False:
 				candidates = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
 			else:
+				human_cig  = [n for n in outDat_by_rName[k][indM] if n[1] in HUMAN_CHR]
+				print 'mate:', outDat_by_rName[k][goodMate]
+				print human_cig
 				candidates = [n for n in outDat_by_rName[k][indM] if not(n[1] in HUMAN_CHR)]
 			if len(candidates) == 1:
 				outDat_by_rName[k][indM] = [candidates[0]]
