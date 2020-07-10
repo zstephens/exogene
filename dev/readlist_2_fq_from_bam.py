@@ -39,8 +39,13 @@ for line in input_stream:
 		if rnm not in rDict:
 			continue
 		flag  = int(splt[1])
-		rdat  = splt[9]
-		qdat  = splt[10]
+		
+		if flag&16:
+			rdat = RC(splt[9])
+			qdat = splt[10][::-1]
+		else:
+			rdat = splt[9]
+			qdat = splt[10]
 
 		if flag&1:
 			if flag&64:
