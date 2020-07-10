@@ -25,7 +25,7 @@ if [ "$ARG_OUT" == "" ]; then
   exit 1
 fi
 
-bwa=/opt/conda/envs/bwa/bin/bwa
+bwa=/usr/bin/bwa
 HVR=/home/refs/HumanViral_Reference_12-12-2018.fa
 
 cat $ARG_REF $HVR > $ARG_OUT
