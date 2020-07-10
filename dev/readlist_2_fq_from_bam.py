@@ -17,6 +17,11 @@ def get_file_handle(fn, rw='r'):
 		print 'Input must be .fq, .fastq, .fq.gz or .fastq.gz'
 		exit(1)
 
+# return the reverse complement of a string
+RC_DICT = {'A':'T','C':'G','G':'C','T':'A','N':'N'}
+def RC(s):
+	return ''.join(RC_DICT[n] for n in s[::-1])
+
 f = open(RLIST,'r')
 rDict = {}
 for line in f:
