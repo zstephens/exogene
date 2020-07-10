@@ -337,8 +337,11 @@ if len(IN_SHORT):
 				scDat = None
 				if sc1[0] > 0:
 					scDat = [r1[0], sc1[1], sc1[0], r1[3]]
+				# prefer alt cigar if present
 				if k in altc_byReadName:
-					print(scDat, altc_byReadName[k])
+					if altc_byReadName[k][0] == r1[0] and abs(altc_byReadName[k][1]-r1[1]) <= tlen_mean+10*tlen_std:
+						sc3 = parse_cigar_for_softclip(altc_byReadName[k])
+						scDat = [r1[0], sc3[1], sc3[0], max([r2[3], altc_byReadName[k][3]])]	# use mapping quality of viral alignment (suppl guaranteed to be 0?)
 
 				# paired-end evidence
 				span1 = parse_cigar_for_match(r1)
