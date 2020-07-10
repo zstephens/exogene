@@ -160,7 +160,7 @@ parser.add_argument('-v1', type=str, required=False, metavar='<str>', help="viru
 parser.add_argument('-v2', type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
 parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
 parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
-parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=1)
+parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
 args = parser.parse_args()
 
