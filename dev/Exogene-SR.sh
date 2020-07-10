@@ -187,7 +187,8 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   $bwa mem -Y -k $ARG_BWA_SEED -t 4 $ARG_REF viral_1.fq viral_2.fq 2>bwa.log | $samtools view -bS - > Viral.bam
   $samtools sort Viral.bam Viral.sort
   $samtools index Viral.sort.bam
-  $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
+  # $samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 > bad.list-tmp
+  touch bad.list-tmp
   $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $perl -lane' print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' >> bad.list-tmp
   sort bad.list-tmp | uniq > bad.list
   # $samtools view Viral.sort.bam | cut -f1,6 |  $awk -v OFS="\t" '{if($2~/.*M.*S.*M.*/)print}' | cut -f1 >> bad.list
