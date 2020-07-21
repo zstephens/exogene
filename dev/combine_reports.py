@@ -145,6 +145,10 @@ def exists_and_is_nonZero(fn):
 			return True
 	return False
 
+def rm(fn):
+	if exists_and_is_nonZero(fn):
+		os.system('rm '+fn)
+
 
 """//////////////////////////////////////////////////
 ////////////    PARSE INPUT ARGUMENTS    ////////////
@@ -159,7 +163,8 @@ parser.add_argument('-v',  type=str, required=False, metavar='<str>', help="viru
 parser.add_argument('-v1', type=str, required=False, metavar='<str>', help="virusNames.json", default='')
 parser.add_argument('-v2', type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
 parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
-parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
+parser.add_argument('-a',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
+parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
 args = parser.parse_args()
@@ -192,7 +197,7 @@ COMPARE        = [(n.split('\t')[1], int(n.split('\t')[2]), n.split('\t')[3]) fo
 COMPARE_OUT    = {n:[] for n in COMPARE}
 COMPARE_OUT_FP = []
 
-BED_DIR = args.b
+BED_DIR = args.a
 if BED_DIR == '':
 	BED_DIR = SIM_PATH + 'resources/'
 BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed',          bed_buffer=50000)],
@@ -230,6 +235,9 @@ for line in f:
 		ACCESSION_TO_TAXONOMY[splt[0]] = splt[4]
 f.close()
 
+SAMTOOLS  = '/opt/conda/envs/samtools/bin/samtools'
+INPUT_BAM = args.b
+
 #
 #
 #
@@ -239,6 +247,8 @@ PLOT_BUFF          = 100
 MAX_LONG_READ_GAP  = 1000		# skip human --> viral junctions that have more than this much unexplained read sequence between them
 MIN_SOFTCLIP       = args.ms
 MIN_DISC_ONLY      = args.md	# if discordant reads are our only source of evidence, demand we have at least this many
+MIN_SOFTCLIP_SIZE  = 10			# minimum softclipped size for reads that aren't anchored in virus (proximal softclips)
+MIN_SOFTCLIP_MULT  = 2			# must have at least this many unanchored softclips at a particular coordinate
 
 clustered_events = []
 evidence_sc      = []	# softclip
@@ -434,6 +444,63 @@ for i in xrange(len(clustered_events)):
 	if isInBadRange(r1,pmin) == False and isInBadRange(r1,pmax) == False:
 		order_to_process_clusters.append((LEXICO_2_IND[r1],r2,pmin,pmax,i))
 order_to_process_clusters = [n[4] for n in sorted(order_to_process_clusters)]
+
+#
+# if we're hunting for proximal softclips, grab all the relevant reads
+#
+proximal_softclips = {}
+if len(INPUT_BAM) and exists_and_is_nonZero(INPUT_BAM) and len(IN_SHORT):
+	sc_regions = []
+	for i in order_to_process_clusters:
+		if len(VOI) and clustered_events[i][0][1] != VOI:
+			continue
+		(min_coord, max_coord) = (999999999999,-1)
+		if i < len(evidence_sc):
+			for n in evidence_sc[i]:
+				if n != None:
+					if n[1] > max_coord: max_coord = n[1]
+					if n[1] < min_coord: min_coord = n[1]
+			for n in evidence_pe[i]:
+				min_coord = min([min_coord, n[0], n[1], n[2], n[3]])
+				max_coord = max([max_coord, n[0], n[1], n[2], n[3]])
+		sc_regions.append([clustered_events[i][0][0], max([0, min_coord-tlen_mean]), max_coord+tlen_mean])
+	sc_f = open(OUT_DIR+'sc_temp.bed', 'w')
+	for n in sc_regions:
+		sc_f.write(str(n[0])+'\t'+str(n[1])+'\t'+str(n[2])+'\n')
+	sc_f.close()
+	sc_track = MappabilityTrack(OUT_DIR+'sc_temp.bed', read_pickle=False)
+	rm(OUT_DIR+'sc_temp.sam')
+	os.system('touch ' + OUT_DIR+'sc_temp.sam')
+	for k in sc_track.all_tracks.keys():
+		for i in xrange(1, len(sc_track.all_tracks[k])-2, 2):
+			myLoc = k+':'+str(sc_track.all_tracks[k][i:i+2][0])+'-'+str(sc_track.all_tracks[k][i:i+2][1])
+			os.system(SAMTOOLS + ' view ' + INPUT_BAM + ' ' + myLoc + ' >> ' + OUT_DIR+'sc_temp.sam')
+	sc_f = open(OUT_DIR+'sc_temp.sam', 'r')
+	for line in sc_f:
+		splt   = line.strip().split('\t')
+		rname  = splt[0]
+		myRef  = splt[2]
+		myPos  = int(splt[3])
+		myMapQ = int(splt[4])
+		myCig  = splt[5]
+		if rname not in data_byReadName and 'S' in myCig:
+			myR = [myRef, myPos, myCig, myMapQ]
+			myS = parse_cigar_for_softclip(myR)
+			if myS[0] >= MIN_SOFTCLIP_SIZE:
+				#print('rawr:', myRef, myPos, myCig, myS)
+				myK = (myRef, myS[1])
+				if myK not in proximal_softclips:
+					proximal_softclips[myK] = 0
+				proximal_softclips[myK] += 1
+	sc_f.close()
+	for k in proximal_softclips.keys():
+		if proximal_softclips[k] < MIN_SOFTCLIP_MULT:
+			del proximal_softclips[k]
+	rm(OUT_DIR+'sc_temp.bed')
+	rm(OUT_DIR+'sc_temp.sam')
+for k in sorted(proximal_softclips.keys()):
+	print(k, proximal_softclips[k])
+exit(1)
 
 zfill_num = len(str(len(clustered_events)))
 

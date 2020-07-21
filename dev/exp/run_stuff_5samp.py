@@ -1,11 +1,11 @@
 import os
 
-WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/'
+WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/'
 SRA_FQ_DIR  = '/research/bsi/data/controlled_access/tcga/LIHC/'
 
 BAM_DIR = '/research/bsi/data/controlled_access/tcga/LIHC/'
 OUT_DIR = WORKING_DIR + 'out/'
-GIT_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_sra/git/exogene/dev/'
+GIT_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/'
 
 OUT_QSH  = WORKING_DIR + 'qsh/'
 OUT_QLOG = WORKING_DIR + 'qlog/'
@@ -34,6 +34,9 @@ SAMPLES = [['9b605411-e103-4b26-b271-faa681ae3829', 'TCGA-DD-AACV-01A-11D-A40R-1
            ['a376ce6f-6d63-45cc-83d0-8910f0c6161e', 'TCGA-DD-AADV-01A-11R-A39D-07'],
            ['fb880503-4b4c-4d7f-8c94-61954cd12259', 'TCGA-DD-AADV-01A-11R-A39J-13'],
            ['d2a4c924-f4c2-42d4-a3df-660748dcd440', 'TCGA-DD-AADV-10A-01D-A38X-10']]
+
+SAMPLES = [['b7fcfb70-5390-4b50-b5cb-3308fb098226', 'TCGA-DD-A1EL-01A-11D-A152-10'],
+           ['70ddc5d6-43d5-43e3-bbd4-33c905d7d5d8', 'TCGA-DD-A1EL-10A-01D-A152-10']]
 
 PYTHON      = '/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'

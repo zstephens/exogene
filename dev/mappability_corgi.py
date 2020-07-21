@@ -36,12 +36,12 @@ def condenseListOfRegions(l):
 
 # mappability track
 class MappabilityTrack:
-	def __init__(self, bedfile, bed_buffer=0):
+	def __init__(self, bedfile, bed_buffer=0, read_pickle=True):
 
 		#print '-', bedfile
 
 		readFromPickle = False
-		if exists_and_is_nonZero(bedfile+'.p'):
+		if read_pickle and exists_and_is_nonZero(bedfile+'.p'):
 			#print 'reading data from pickle...'
 			self.all_tracks = pickle.load(open(bedfile+'.p','rb'))
 			readFromPickle = True
@@ -72,9 +72,9 @@ class MappabilityTrack:
 				lines[myChr].append((myPos,myEnd))
 			f.close()
 			for k in sorted(lines.keys()):
-				print k, len(lines[k]), '-->',
+				#print k, len(lines[k]), '-->',
 				s_dat = condenseListOfRegions(sorted(lines[k]))
-				print len(s_dat), '-->',
+				#print len(s_dat), '-->',
 				can_I_stop_yet = False
 				i_start = len(s_dat)-2
 				while can_I_stop_yet == False:
@@ -87,7 +87,7 @@ class MappabilityTrack:
 							can_I_stop_yet = False
 							break
 				lines[k] = condenseListOfRegions(s_dat)
-				print len(lines[k])
+				#print len(lines[k])
 
 			# convert to a bisect-friendly list
 			self.all_tracks = {k:[-1] for k in lines.keys()}
@@ -107,8 +107,9 @@ class MappabilityTrack:
 					exit(1)
 				self.all_tracks[k].append(LARGE_NUMBER)
 
-			print 'saving bed data as pickle...'
-			pickle.dump(self.all_tracks,open(bedfile+'.p','wb'))
+			if read_pickle:
+				print 'saving bed data as pickle...'
+				pickle.dump(self.all_tracks,open(bedfile+'.p','wb'))
 
 	# return True if index is in bedfile region, False if outside
 	def query(self, myChr, coord, endPointInclusive=True):
