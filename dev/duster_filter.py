@@ -2,7 +2,7 @@ import sys
 
 # dustmasker -in reads.fa -outfmt fasta | python duster_filter.py max_lowcomplex_frac duster.out duster.retain duster.remove
 
-THRESH   = float(sys.argv[1])
+THRESH   = float(sys.argv[1])/100.	# input is given as integer percent, e.g. "70"
 F_OUT    = sys.argv[2]
 F_RETAIN = sys.argv[3]
 F_REMOVE = sys.argv[4]
