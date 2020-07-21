@@ -2,7 +2,7 @@
 
 USAGE_1="Usage (bam): `basename $0` -b input.bam -r ref.fa -o output_dir/"
 USAGE_2="Usage (fq):  `basename $0` -f1 read1.fq.gz -f2 read2.fq.gz -r ref.fa -o output_dir/"
-USAGE_3="optional arguments: -k bwa_seed_size [40] -d duster_exclude_frac [40]"
+USAGE_3="optional arguments: -k bwa_seed_size [30] -d duster_exclude_frac [70]"
 
 #input argument parsing
 ARG_BAM=""
@@ -10,10 +10,10 @@ ARG_R1=""
 ARG_R2=""
 ARG_REF=""
 ARG_OUT=""
-# toss out reads where >40% is flagged by duster as low complexity
-ARG_DUSTER_FRAC=40
 # bwa seed size
-ARG_BWA_SEED=40
+ARG_BWA_SEED=30
+# toss out reads where >70% is flagged by duster as low complexity
+ARG_DUSTER_FRAC=70
 # read input args
 while [[ "$#" -gt 0 ]]; do case $1 in
   -b|--bam) ARG_BAM="$2"; shift;;
@@ -134,7 +134,7 @@ if [ "$INPUT_MODE" == "bam" ]; then
   echo "input = $ARG_BAM" > software.log
   echo "identifying potential viral read candidates">> software.log
   # run bwa against viral reference, don't align again unless we have to
-  if [ ! -f viral_reads_se.ids ]; then
+  if [ ! -f viral_reads_se.reads ]; then
     $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
     # get length information
     len=$($samtools view $ARG_BAM | head -10000 | cut -f6 | sort | uniq -c | sort -nr | head -1 | $perl -lane 'print"$F[1]";' | sed s/'M'//g)

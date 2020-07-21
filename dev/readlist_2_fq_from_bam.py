@@ -1,5 +1,6 @@
 import sys
 import gzip
+import time
 
 # samtools view input.bam | python readlist_2_fq_from_bam.py readlist out_r1.fq out_r2.fq outReadCount
 
@@ -35,15 +36,21 @@ else:
 	print 'No input.'
 	exit(1)
 
-unique_readnames = {}
+fo_1 = get_file_handle(OUT_R1, 'w')
+fo_2 = get_file_handle(OUT_R2, 'w')
+
+tt = time.time()
+nWritten = 0
 for line in input_stream:
 	if len(line) and line[0] != '#':
 		splt  = line.strip().split('\t')
 		rnm   = splt[0]
-		unique_readnames[rnm] = True
 		if rnm not in rDict:
 			continue
 		flag  = int(splt[1])
+
+		if flag&2048:	# skip supplementary alignments
+			continue
 		
 		if flag&16:
 			rdat = RC(splt[9])
@@ -54,34 +61,28 @@ for line in input_stream:
 
 		if flag&1:
 			if flag&64:
-				rDict[rnm][0].append([rdat, qdat])
+				rDict[rnm][0] = [rdat, qdat]
 			elif flag&128:
-				rDict[rnm][1].append([rdat, qdat])
+				rDict[rnm][1] = [rdat, qdat]
 
-fo_0 = open(OUT_CNT, 'w')
-fo_0.write(str(len(unique_readnames)))
-fo_0.close()
+		if len(rDict[rnm][0]) and len(rDict[rnm][1]):
+			fo_1.write('@' + rnm + '/1\n')
+			fo_1.write(rDict[rnm][0][0] + '\n')
+			fo_1.write('+\n')
+			fo_1.write(rDict[rnm][0][1] + '\n')
+			fo_2.write('@' + rnm + '/2\n')
+			fo_2.write(rDict[rnm][1][0] + '\n')
+			fo_2.write('+\n')
+			fo_2.write(rDict[rnm][1][1] + '\n')
+			del rDict[rnm]
+			nWritten += 1
+			if nWritten%1000000 == 0:
+				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
+print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
 
-# only include reads where we can find both members of a pair!
-for k in sorted(rDict.keys()):
-	if len(rDict[k][0]) and len(rDict[k][1]):
-		rDict[k] = [rDict[k][0][0][0], rDict[k][0][0][1], rDict[k][1][0][0], rDict[k][1][0][1]]
-	else:
-		rDict[k] = ['','','','']
-
-fo_1 = get_file_handle(OUT_R1, 'w')
-fo_2 = get_file_handle(OUT_R2, 'w')
-for k in sorted(rDict.keys()):
-	if rDict[k][0] == '' or rDict[k][1] == '' or rDict[k][2] == '' or rDict[k][3] == '':
-		continue
-	fo_1.write('@' + k + '/1\n')
-	fo_1.write(rDict[k][0] + '\n')
-	fo_1.write('+\n')
-	fo_1.write(rDict[k][1] + '\n')
-	fo_2.write('@' + k + '/2\n')
-	fo_2.write(rDict[k][2] + '\n')
-	fo_2.write('+\n')
-	fo_2.write(rDict[k][3] + '\n')
 fo_2.close()
 fo_1.close()
 
+fo_0 = open(OUT_CNT, 'w')
+fo_0.write(str(nWritten))
+fo_0.close()
