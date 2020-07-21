@@ -136,14 +136,10 @@ if [ "$INPUT_MODE" == "bam" ]; then
   # run bwa against viral reference, don't align again unless we have to
   if [ ! -f viral_reads_se.reads ]; then
     $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
-    # get length information
-    len=$($samtools view $ARG_BAM | head -10000 | cut -f6 | sort | uniq -c | sort -nr | head -1 | $perl -lane 'print"$F[1]";' | sed s/'M'//g)
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   echo "input = $ARG_R1 $ARG_R2" > software.log
   echo "identifying potential viral read candidates" >> software.log
-  # get length information
-  len=$(zcat $ARG_R1 | head -2 | tail -1 | wc -c)
   # run bwa against viral reference, don't align again unless we have to
   if [ ! -f viral_reads_se.reads ]; then
     zcat $ARG_R1 $ARG_R2 | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
@@ -158,8 +154,7 @@ date >> software.log
 # run blast duster
 if [ ! -f viral_reads_se.ids.cleaned ]; then
   echo "evaluating viral reads for repeats" >> software.log
-  read_len_25p=`echo "0.${ARG_DUSTER_FRAC}*$((len-1))" | bc`
-  $duster -in viral_reads_se.fa -outfmt acclist | $duster_filt $read_len_25p duster.out duster.retain duster.remove
+  $duster -in viral_reads_se.fa -outfmt fasta | $duster_filt $ARG_DUSTER_FRAC duster.out duster.retain duster.remove
   cat duster.remove viral_reads_se.ids | sort | uniq -u > viral_reads_se.ids.cleaned
   cat duster.retain viral_reads_se.ids.cleaned | sort | uniq > viral_reads_se.keep
   echo "repeats evaluated" >> software.log
