@@ -111,17 +111,17 @@ else
 fi
 
 # exes
-samtools=/opt/conda/envs/samtools/bin/samtools
-pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
-pbsv=/opt/conda/envs/pbmm2/bin/pbsv
+samtools=/research/bsi/tools/biotools/samtools/0.1.18/samtools
+pbmm2=/research/bsi/tools/biotools/smrtlink/8.0/smrtcmds/bin/pbmm2
+pbsv=/research/bsi/tools/biotools/smrtlink/8.0/smrtcmds/bin/pbsv
 
 # scripts
-grep_virus="python /home/exogene/dev/grep_virus_from_sam.py"
-gen_report="python /home/exogene/dev/plot_viral_long_reads.py"
-vcf_to_fa="python /home/exogene/dev/vcf_2_insfa.py"
+grep_virus="python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/grep_virus_from_sam.py"
+gen_report="python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/plot_viral_long_reads.py"
+vcf_to_fa="python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/vcf_2_insfa.py"
 
 # resources
-viral_db_json=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
+viral_db_json=/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
 
 mkdir -p $ARG_OUT
 cd $ARG_OUT

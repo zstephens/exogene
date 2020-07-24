@@ -145,6 +145,7 @@ elif [ "$INPUT_MODE" == "fq" ]; then
     zcat $ARG_R1 $ARG_R2 | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
   fi
 fi
+
 cut -f6 viral_reads_se.reads | sed s/'[0-9]'//g > viral_reads_se.cigar
 #paste viral_reads_se.cigar viral_reads_se.reads | $perl -lane 'if(($F[0]eq"M")||($F[0]eq"SM")||($F[9]eq"MS")){print">$F[1]\n$F[10]"};' > viral_reads_se.fa
 paste viral_reads_se.cigar viral_reads_se.reads | $perl -lane 'print">$F[1]\n$F[10]";' > viral_reads_se.fa

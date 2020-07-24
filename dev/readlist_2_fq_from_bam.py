@@ -77,7 +77,7 @@ for line in input_stream:
 			del rDict[rnm]
 			nWritten += 1
 			if nWritten%1000000 == 0:
-				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
+				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)', splt[2] + ':' + splt[3]
 print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
 
 fo_2.close()
