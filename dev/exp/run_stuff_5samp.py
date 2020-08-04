@@ -6,6 +6,8 @@ SRA_FQ_DIR  = '/research/bsi/data/controlled_access/tcga/LIHC/'
 BAM_DIR = '/research/bsi/data/controlled_access/tcga/LIHC/'
 OUT_DIR = WORKING_DIR + 'out/'
 GIT_DIR = WORKING_DIR + 'exogene/dev/'
+HGT_OUT = WORKING_DIR + 'hgtid_result/'
+REALIGN_DIR = WORKING_DIR + 'bam_realign_to_hg38/'
 
 OUT_QSH  = WORKING_DIR + 'qsh/'
 OUT_QLOG = WORKING_DIR + 'qlog/'
@@ -48,7 +50,12 @@ PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
 EXOGENE_SR  = GIT_DIR + 'Exogene-SR-mforge.sh'
 COMBINE_REP = PYTHON + ' ' + GIT_DIR + 'combine_reports.py'
 
+SAMTOOLS    = '/research/bsi/tools/biotools/samtools/1.10/bin/samtools'
+BWA_MEM     = '/research/bsi/tools/biotools/bwa/0.7.10/bwa mem'
+PERL        = '/research/bsi/tools/biotools/perl/5.30.0/bin/perl'
+
 REF_HVR38   = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_sra/ref/hg38_and_viral.fa'
+REF_HG38    = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/temp/hg38_clean.fa'
 
 def exists_and_is_nonZero(fn):
 	if os.path.isfile(fn):
@@ -73,7 +80,7 @@ for i in xrange(len(SAMPLES)):
 	HEADER += '#$ -q ' + myQueue + '\n'
 	HEADER += '#$ -o ' + OUT_QLOG + jobName + '.o' + '\n'
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
-	HEADER += '#$ -m ae' + '\n'
+	HEADER += '#$ -m abe' + '\n'
 	HEADER += '#$ -M ' + EMAIL + '\n'
 	HEADER += '#$ -l h_vmem=64G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
@@ -92,6 +99,74 @@ for i in xrange(len(SAMPLES)):
 	print OUT_QSH+jobName+'.sh'
 	#os.system('qsub '+OUT_QSH+jobName+'.sh')
 
+
+
+
+
+	jobName = 'realign_' + str(i)
+
+	HEADER  = ''
+	HEADER += '#!/bin/bash' + '\n'
+	HEADER += '#$ -N ' + jobName + '\n'
+	HEADER += '#$ -q ' + '30-day' + '\n'
+	HEADER += '#$ -o ' + OUT_QLOG + jobName + '.o' + '\n'
+	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
+	HEADER += '#$ -m abe' + '\n'
+	HEADER += '#$ -M ' + EMAIL + '\n'
+	HEADER += '#$ -l h_vmem=256G ' + '\n'
+	HEADER += '#$ -notify ' + '\n'
+
+	realign_bam  = REALIGN_DIR + SAMPLES[i][1] + '.bam'
+	realign_temp = REALIGN_DIR + SAMPLES[i][1] + '-temp'
+	realign_sort = REALIGN_DIR + SAMPLES[i][1] + '-sort.bam'
+
+	CMD  = ''
+	CMD += SAMTOOLS + ' view -F 2048 $ARG_BAM | '
+	CMD += PERL + ' -lane \'print"\\@$F[0]\\n$F[9]\\n+\\n$F[10]";\' | '
+	CMD += BWA_MEM + ' -t 4 ' + REF_HG38 + ' - | '
+	CMD += SAMTOOLS + ' view -bS - > ' + realign_bam + ';\n\n'
+
+	CMD += SAMTOOLS + ' sort -@ 3 -o ' + realign_sort + ' -T ' + realign_temp + ' ' + realign_bam + ';\n\n'
+
+	CMD += SAMTOOLS + ' index ' + realign_sort + ';\n\n'
+
+	f = open(OUT_QSH+jobName+'.sh', 'w')
+	f.write(HEADER+'\n'+CMD+'\n')
+	f.close()
+	print OUT_QSH+jobName+'.sh'
+	#os.system('qsub '+OUT_QSH+jobName+'.sh')
+
+
+
+
+
+
+	jobName = 'hgt_' + str(i)
+
+	HEADER  = ''
+	HEADER += '#!/bin/bash' + '\n'
+	HEADER += '#$ -N ' + jobName + '\n'
+	HEADER += '#$ -q ' + '30-day' + '\n'
+	HEADER += '#$ -o ' + OUT_QLOG + jobName + '.o' + '\n'
+	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
+	HEADER += '#$ -m abe' + '\n'
+	HEADER += '#$ -M ' + EMAIL + '\n'
+	HEADER += '#$ -l h_vmem=256G ' + '\n'
+	HEADER += '#$ -notify ' + '\n'
+
+	hgtid = HGT_OUT + SAMPLES[i][1] + '/'
+
+	CMD  = ''
+	CMD += 'perl /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/src/hgt.pl -d '
+	CMD += '-c /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/src/config-mforge.txt '
+	CMD += '-o ' + hgtid + ' -b ' + realign_sort + ';\n\n'
+
+	f = open(OUT_QSH+jobName+'.sh', 'w')
+	f.write(HEADER+'\n'+CMD+'\n')
+	f.close()
+	print OUT_QSH+jobName+'.sh'
+	#os.system('qsub '+OUT_QSH+jobName+'.sh')
+	
 
 
 ####listing = [n for n in os.listdir(SRA_FQ_DIR) if n[-9:] == '.fastq.gz']
