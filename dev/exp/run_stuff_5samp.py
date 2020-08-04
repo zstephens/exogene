@@ -47,7 +47,7 @@ SAMPLES = [['9b605411-e103-4b26-b271-faa681ae3829', 'TCGA-DD-AACV-01A-11D-A40R-1
 
 PYTHON      = '/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
-EXOGENE_SR  = GIT_DIR + 'Exogene-SR-mforge.sh'
+EXOGENE_SR  = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/Exogene-SR-mforge.sh'
 COMBINE_REP = PYTHON + ' ' + GIT_DIR + 'combine_reports.py'
 
 SAMTOOLS    = '/research/bsi/tools/biotools/samtools/1.10/bin/samtools'
@@ -166,7 +166,7 @@ for i in xrange(len(SAMPLES)):
 	f.close()
 	print OUT_QSH+jobName+'.sh'
 	#os.system('qsub '+OUT_QSH+jobName+'.sh')
-	
+
 
 
 ####listing = [n for n in os.listdir(SRA_FQ_DIR) if n[-9:] == '.fastq.gz']
