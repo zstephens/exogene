@@ -135,7 +135,7 @@ if [ "$INPUT_MODE" == "bam" ]; then
   echo "identifying potential viral read candidates">> software.log
   # run bwa against viral reference, don't align again unless we have to
   if [ ! -f viral_reads_se.reads ]; then
-    $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
+    $samtools view -F 2048 $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   echo "input = $ARG_R1 $ARG_R2" > software.log

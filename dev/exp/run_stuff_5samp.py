@@ -1,44 +1,49 @@
 import os
 
-WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/'
+WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/'
 SRA_FQ_DIR  = '/research/bsi/data/controlled_access/tcga/LIHC/'
 
 BAM_DIR = '/research/bsi/data/controlled_access/tcga/LIHC/'
 OUT_DIR = WORKING_DIR + 'out/'
-GIT_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/'
+GIT_DIR = WORKING_DIR + 'exogene/dev/'
 
 OUT_QSH  = WORKING_DIR + 'qsh/'
 OUT_QLOG = WORKING_DIR + 'qlog/'
 EMAIL    = 'stephens.zachary@mayo.edu'
+EMAIL    = 'zstephe2@illinois.edu'
 
 QUEUES  = ['1-hour', '1-day', '4-day', '7-day', '30-day']
-myQueue = '1-day'
+myQueue = '4-day'
 
-SAMPLES = [['9b605411-e103-4b26-b271-faa681ae3829', 'TCGA-DD-AACV-01A-11D-A40R-10'],
-           ['faecbc9e-693a-45a3-b041-79b17c75c880', 'TCGA-DD-AACV-01A-11R-A41C-07'],
-           ['f9764955-0347-43dc-9e7c-72501eec5c88', 'TCGA-DD-AACV-01A-11R-A41H-13'],
-           ['5f15cedd-18b8-4082-8c30-a4db8551b17e', 'TCGA-DD-AACV-10A-01D-A40U-10'],
-           ['958b0375-51ca-47e1-9bfc-424afba91cd6', 'TCGA-DD-AAD0-01A-11D-A40R-10'],
-           ['ee1cbcf2-706f-4a6d-9cd8-d25666d3f093', 'TCGA-DD-AAD0-01A-11R-A41C-07'],
-           ['260520b6-080c-4917-9001-35427b21dceb', 'TCGA-DD-AAD0-01A-11R-A41H-13'],
-           ['56108e1f-849c-4d4d-9bff-0205180e5c94', 'TCGA-DD-AAD0-10A-01D-A40U-10'],
-           ['1397d066-01c2-4cd6-9cda-6fbb95887be0', 'TCGA-DD-AADL-01A-11D-A40R-10'],
-           ['9c516342-1859-45db-9202-23a9469e43f9', 'TCGA-DD-AADL-01A-11R-A41C-07'],
-           ['388893f8-1fc6-4180-b0f6-6deb3b20bd48', 'TCGA-DD-AADL-01A-11R-A41H-13'],
-           ['9c404bcc-59a0-4116-ab02-eebfefb8677b', 'TCGA-DD-AADL-10A-01D-A40U-10'],
-           ['7552eb82-ff2a-4cc0-a0eb-45dbadc6136f', 'TCGA-DD-AADU-01A-11D-A40R-10'],
-           ['802206f5-b7c3-4262-88d7-a7a373c70202', 'TCGA-DD-AADU-01A-11R-A41C-07'],
-           ['92baa5a4-c31b-4aae-9e2e-c171e6430feb', 'TCGA-DD-AADU-01A-11R-A41H-13'],
-           ['8238e3ae-6936-40be-8639-a32492b2e8fe', 'TCGA-DD-AADU-10A-01D-A40U-10'],
-           ['ba001ff0-4895-45e6-85c6-58eb3b016198', 'TCGA-DD-AADV-01A-11D-A38X-10'],
-           ['a376ce6f-6d63-45cc-83d0-8910f0c6161e', 'TCGA-DD-AADV-01A-11R-A39D-07'],
-           ['fb880503-4b4c-4d7f-8c94-61954cd12259', 'TCGA-DD-AADV-01A-11R-A39J-13'],
-           ['d2a4c924-f4c2-42d4-a3df-660748dcd440', 'TCGA-DD-AADV-10A-01D-A38X-10']]
+SAMPLES = [['9b605411-e103-4b26-b271-faa681ae3829', 'TCGA-DD-AACV-01A-11D-A40R-10', 'WXS',   'TUMOR'],
+           #['82f4bdfc-6861-11e4-9b49-60d7fc308db6', 'TCGA-DD-AACV-01A-11R-A41C-07', 'RNA',   'TUMOR'],
+           #['f9764955-0347-43dc-9e7c-72501eec5c88', 'TCGA-DD-AACV-01A-11R-A41H-13', 'miRNA', 'TUMOR'],
+           ['5f15cedd-18b8-4082-8c30-a4db8551b17e', 'TCGA-DD-AACV-10A-01D-A40U-10', 'WXS',   'NORMAL'],
 
-SAMPLES = [['b7fcfb70-5390-4b50-b5cb-3308fb098226', 'TCGA-DD-A1EL-01A-11D-A152-10'],
-           ['70ddc5d6-43d5-43e3-bbd4-33c905d7d5d8', 'TCGA-DD-A1EL-10A-01D-A152-10']]
+           ['958b0375-51ca-47e1-9bfc-424afba91cd6', 'TCGA-DD-AAD0-01A-11D-A40R-10', 'WXS',   'TUMOR'],
+           #['a463e1e4-7f21-11e4-bc03-c46bfc308db6', 'TCGA-DD-AAD0-01A-11R-A41C-07', 'RNA',   'TUMOR'],
+           #['260520b6-080c-4917-9001-35427b21dceb', 'TCGA-DD-AAD0-01A-11R-A41H-13', 'miRNA', 'TUMOR'],
+           ['56108e1f-849c-4d4d-9bff-0205180e5c94', 'TCGA-DD-AAD0-10A-01D-A40U-10', 'WXS',   'NORMAL'],
 
-PYTHON      = '/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7'
+           ['1397d066-01c2-4cd6-9cda-6fbb95887be0', 'TCGA-DD-AADL-01A-11D-A40R-10', 'WXS',   'TUMOR'],
+           #['a4b0985e-7f21-11e4-bc03-c46bfc308db6', 'TCGA-DD-AADL-01A-11R-A41C-07', 'RNA',   'TUMOR'],
+           #['388893f8-1fc6-4180-b0f6-6deb3b20bd48', 'TCGA-DD-AADL-01A-11R-A41H-13', 'miRNA', 'TUMOR'],
+           ['9c404bcc-59a0-4116-ab02-eebfefb8677b', 'TCGA-DD-AADL-10A-01D-A40U-10', 'WXS',   'NORMAL'],
+
+           ['7552eb82-ff2a-4cc0-a0eb-45dbadc6136f', 'TCGA-DD-AADU-01A-11D-A40R-10', 'WXS',   'TUMOR'],
+           #['802206f5-b7c3-4262-88d7-a7a373c70202', 'TCGA-DD-AADU-01A-11R-A41C-07', 'RNA',   'TUMOR'],
+           #['92baa5a4-c31b-4aae-9e2e-c171e6430feb', 'TCGA-DD-AADU-01A-11R-A41H-13', 'miRNA', 'TUMOR'],
+           ['8238e3ae-6936-40be-8639-a32492b2e8fe', 'TCGA-DD-AADU-10A-01D-A40U-10', 'WXS',   'NORMAL'],
+
+           ['ba001ff0-4895-45e6-85c6-58eb3b016198', 'TCGA-DD-AADV-01A-11D-A38X-10', 'WXS',   'TUMOR'],
+           #['a376ce6f-6d63-45cc-83d0-8910f0c6161e', 'TCGA-DD-AADV-01A-11R-A39D-07', 'RNA',   'TUMOR'],
+           #['fb880503-4b4c-4d7f-8c94-61954cd12259', 'TCGA-DD-AADV-01A-11R-A39J-13', 'miRNA', 'TUMOR'],
+           ['d2a4c924-f4c2-42d4-a3df-660748dcd440', 'TCGA-DD-AADV-10A-01D-A38X-10', 'WXS',   'NORMAL'],
+
+           ['b7fcfb70-5390-4b50-b5cb-3308fb098226', 'TCGA-DD-A1EL-01A-11D-A152-10', 'WGS',   'TUMOR'],
+           ['70ddc5d6-43d5-43e3-bbd4-33c905d7d5d8', 'TCGA-DD-A1EL-10A-01D-A152-10', 'WGS',   'NORMAL']]
+
+PYTHON      = '/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
 EXOGENE_SR  = GIT_DIR + 'Exogene-SR-mforge.sh'
 COMBINE_REP = PYTHON + ' ' + GIT_DIR + 'combine_reports.py'
@@ -57,6 +62,7 @@ for i in xrange(len(SAMPLES)):
 	if len(listing):
 		myBam = BAM_DIR+SAMPLES[i][0]+'/'+listing[0]
 	else:
+		print SAMPLES[i][0], 'does not exist, sadly.'
 		continue
 	jobName = 'exogene_' + str(i)
 	exo_out = OUT_DIR + SAMPLES[i][1] + '/'
@@ -67,9 +73,9 @@ for i in xrange(len(SAMPLES)):
 	HEADER += '#$ -q ' + myQueue + '\n'
 	HEADER += '#$ -o ' + OUT_QLOG + jobName + '.o' + '\n'
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
-	#HEADER += '#$ -m ae' + '\n'
-	#HEADER += '#$ -M ' + EMAIL + '\n'
-	HEADER += '#$ -l h_vmem=32G ' + '\n'
+	HEADER += '#$ -m ae' + '\n'
+	HEADER += '#$ -M ' + EMAIL + '\n'
+	HEADER += '#$ -l h_vmem=64G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
 
 	reads_report = exo_out + 'Viral_Reads_Report.tsv'
@@ -84,7 +90,7 @@ for i in xrange(len(SAMPLES)):
 	f.write(HEADER+'\n'+CMD+'\n')
 	f.close()
 	print OUT_QSH+jobName+'.sh'
-	os.system('qsub '+OUT_QSH+jobName+'.sh')
+	#os.system('qsub '+OUT_QSH+jobName+'.sh')
 
 
 
