@@ -135,7 +135,7 @@ if [ "$INPUT_MODE" == "bam" ]; then
   echo "identifying potential viral read candidates">> software.log
   # run bwa against viral reference, don't align again unless we have to
   if [ ! -f viral_reads_se.reads ]; then
-    $samtools view $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
+    $samtools view -F 2048 $ARG_BAM | $perl -lane 'print"\@$F[0]\n$F[9]\n+\n$F[10]";' | $bwa mem -k $ARG_BWA_SEED -t 4 $HVR - | egrep -v '^@' | $perl -lane 'if($F[2]ne"\*"){print"$_"};' > viral_reads_se.reads
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   echo "input = $ARG_R1 $ARG_R2" > software.log
@@ -221,7 +221,7 @@ date >> software.log
 $samtools view ${name}_viral.bam | cut -f1,3 > VReads_1.1
 fgrep -f $ViralAcc VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
-$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,2,3,4,5,6,7,8,10 > VReads_1
+$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,2,3,4,5,6,7,8,9,10 > VReads_1
 $viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
 rm VReads_*
 echo "created viral read details report" >> software.log

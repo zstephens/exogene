@@ -221,7 +221,7 @@ date >> software.log
 $samtools view ${name}_viral.bam | cut -f1,3 > VReads_1.1
 fgrep -f $ViralAcc VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
-$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,2,3,4,5,6,7,8,10 > VReads_1
+$samtools view ${name}_viral.bam | fgrep -f VReads_1.3 | cut -f1,2,3,4,5,6,7,8,9,10 > VReads_1
 $viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
 rm VReads_*
 echo "created viral read details report" >> software.log

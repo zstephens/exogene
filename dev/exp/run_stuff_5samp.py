@@ -1,7 +1,7 @@
 import os
 
 WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/'
-SRA_FQ_DIR  = '/research/bsi/data/controlled_access/tcga/LIHC/'
+#SRA_FQ_DIR  = '/research/bsi/data/controlled_access/tcga/LIHC/'
 
 BAM_DIR = '/research/bsi/data/controlled_access/tcga/LIHC/'
 OUT_DIR = WORKING_DIR + 'out/'
@@ -42,8 +42,10 @@ SAMPLES = [['9b605411-e103-4b26-b271-faa681ae3829', 'TCGA-DD-AACV-01A-11D-A40R-1
            #['fb880503-4b4c-4d7f-8c94-61954cd12259', 'TCGA-DD-AADV-01A-11R-A39J-13', 'miRNA', 'TUMOR'],
            ['d2a4c924-f4c2-42d4-a3df-660748dcd440', 'TCGA-DD-AADV-10A-01D-A38X-10', 'WXS',   'NORMAL'],
 
-           ['b7fcfb70-5390-4b50-b5cb-3308fb098226', 'TCGA-DD-A1EL-01A-11D-A152-10', 'WGS',   'TUMOR'],
-           ['70ddc5d6-43d5-43e3-bbd4-33c905d7d5d8', 'TCGA-DD-A1EL-10A-01D-A152-10', 'WGS',   'NORMAL']]
+           #['b7fcfb70-5390-4b50-b5cb-3308fb098226', 'TCGA-DD-A1EL-01A-11D-A152-10', 'WGS',   'TUMOR'],
+           #['70ddc5d6-43d5-43e3-bbd4-33c905d7d5d8', 'TCGA-DD-A1EL-10A-01D-A152-10', 'WGS',   'NORMAL'],
+           ['53668b25-f770-4bfd-b3e9-8fb5cb19054e', 'TCGA-DD-A1EL-01A-11D-A152-10', 'WXS',   'TUMOR'],
+           ['71d753c8-2aa1-46b3-bb6a-edab9a90de6d', 'TCGA-DD-A1EL-10A-01D-A152-10', 'WXS',   'NORMAL']]
 
 PYTHON      = '/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'

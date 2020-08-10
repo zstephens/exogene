@@ -33,18 +33,26 @@ f.close()
 outDat_by_rName = {}
 f = open(V_DAT,'r')
 for line in f:
-	splt = line.strip('\n').split('\t')
-	myRefName = splt[2]
-	if myRefName in viral_keyDict:
-		myRefName = viral_keyDict[myRefName]
-	if splt[0] not in outDat_by_rName:
-		outDat_by_rName[splt[0]] = [[], []]
-	myFlag = int(splt[1])
-	if myFlag&1:
-		if myFlag&64:
-			outDat_by_rName[splt[0]][0].append([splt[0], splt[2], splt[3], splt[4], splt[5], splt[8], myRefName])
-		elif myFlag&128:
-			outDat_by_rName[splt[0]][1].append([splt[0], splt[2], splt[3], splt[4], splt[5], splt[8], myRefName])
+	if len(line) and line[0] != '@' and line[0] != '#':
+		splt = line.strip('\n').split('\t')
+		if len(splt) < 10:
+			continue
+		if len(splt[1]) == 0:	# some intermediary HGT-ID bams are missing samflags for some reason
+			continue
+		myRefName = splt[2]
+		if myRefName in viral_keyDict:
+			myRefName = viral_keyDict[myRefName]
+		elif myRefName.split('.')[0] in viral_keyDict:	# support for HGT-ID's viral refnames
+			myRefName = viral_keyDict[myRefName.split('.')[0]]
+			splt[2]   = splt[2].split('.')[0]
+		if splt[0] not in outDat_by_rName:
+			outDat_by_rName[splt[0]] = [[], []]
+		myFlag = int(splt[1])
+		if myFlag&1:
+			if myFlag&64:
+				outDat_by_rName[splt[0]][0].append([splt[0], splt[2], splt[3], splt[4], splt[5], splt[9], myRefName])
+			elif myFlag&128:
+				outDat_by_rName[splt[0]][1].append([splt[0], splt[2], splt[3], splt[4], splt[5], splt[9], myRefName])
 f.close()
 
 # R1_ID    R1_Contig    R1_Pos    R1_MAPQ    R1_CIGAR    R1_Seq    R1_RefName

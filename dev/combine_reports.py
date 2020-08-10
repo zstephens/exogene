@@ -173,7 +173,7 @@ args = parser.parse_args()
 (IN_SHORT, IN_LONG, OUT_DIR) = (args.s, args.l, args.o)
 
 VOI = args.v
-#VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
+VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
 
 if IN_SHORT == '' and IN_LONG == '':
 	print('Must specify either -s or -l')
@@ -250,6 +250,16 @@ MIN_DISC_ONLY      = args.md	# if discordant reads are our only source of eviden
 MIN_SOFTCLIP_SIZE  = 10			# minimum softclipped size for reads that aren't anchored in virus (proximal softclips)
 MIN_SOFTCLIP_MULT  = 2			# must have at least this many unanchored softclips at a particular coordinate
 
+if MIN_SOFTCLIP < 0:
+	print('Error: -ms must be > 0')
+	exit(1)
+if MIN_DISC_ONLY < 0:
+	print('Error: -md must be > 0')
+	exit(1)
+if MIN_SOFTCLIP <= 0 and MIN_DISC_ONLY <= 0:
+	print('Error: either -ms or -md must be > 0')
+	exit(1)
+
 clustered_events = []
 evidence_sc      = []	# softclip
 evidence_pe      = []	# discordant paired-end reads
@@ -277,7 +287,9 @@ if len(IN_SHORT):
 			ind_seq   = splt.index('R1_Seq')
 			ind_mapq  = splt.index('R1_MAPQ')
 			r2_offset = 7
-			ind_altc  = splt.index('alt_cigar')
+			ind_altc  = None
+			if 'alt_cigar' in splt:
+				ind_altc = splt.index('alt_cigar')
 			continue
 
 		splt   = line.strip().split('\t')
@@ -299,7 +311,7 @@ if len(IN_SHORT):
 		myMapQ = int(splt[ind_mapq+r2_offset])
 		data_byReadName[myName].append([myRef, myPos, myCig, myMapQ])
 		# alternate cigar
-		if splt[ind_altc] != '-':
+		if ind_altc != None and splt[ind_altc] != '-':
 			splt2 = splt[ind_altc].split('_')
 			altc_byReadName[myName] = [splt2[0], int(splt2[1]), splt2[3], int(splt2[2])]
 
@@ -340,6 +352,10 @@ if len(IN_SHORT):
 				if r2[0] in ACCESSION_TO_TAXONOMY:
 					r2[0] = ACCESSION_TO_TAXONOMY[r2[0]]
 				#print('--',[r1,r2])
+
+				# speed things up, only extract reads pertaining to virus-of-interest
+				if len(VOI) and r2[0] != VOI:
+					continue
 
 				# softclip evidence
 				sc1 = parse_cigar_for_softclip(r1)
@@ -498,9 +514,9 @@ if len(INPUT_BAM) and exists_and_is_nonZero(INPUT_BAM) and len(IN_SHORT):
 			del proximal_softclips[k]
 	rm(OUT_DIR+'sc_temp.bed')
 	rm(OUT_DIR+'sc_temp.sam')
-for k in sorted(proximal_softclips.keys()):
-	print(k, proximal_softclips[k])
-exit(1)
+#for k in sorted(proximal_softclips.keys()):
+#	print(k, proximal_softclips[k])
+#exit(1)
 
 zfill_num = len(str(len(clustered_events)))
 
@@ -523,6 +539,8 @@ bp_dev_clr = []
 sc_count_by_class = {}
 pe_count_by_class = {}
 for i in order_to_process_clusters:
+
+	#print(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
 
 	if len(VOI) and clustered_events[i][0][1] != VOI:
 		continue
@@ -656,7 +674,17 @@ for i in order_to_process_clusters:
 
 	# read support filters
 	if len(evidence_pb[i]) == 0:
-		if max_sc < MIN_SOFTCLIP and max_pe < MIN_DISC_ONLY:
+		if MIN_SOFTCLIP > 0 and max_sc < MIN_SOFTCLIP:
+			not_enough_softclip = True
+		else:
+			not_enough_softclip = False
+		if MIN_DISC_ONLY > 0 and max_pe < MIN_DISC_ONLY:
+			not_enough_disc = True
+		else:
+			not_enough_disc = False
+		if not_enough_softclip:
+			continue
+		if MIN_SOFTCLIP <= 0 and not_enough_disc:
 			continue
 	else:
 		ccs_coord_list = [n[0] for n in evidence_pb[i] if n[1] == 'CCS']
@@ -709,7 +737,7 @@ for i in order_to_process_clusters:
 	ax = mpl.gca()
 	#ax.add_collection(PatchCollection(poly_pe, alpha=0.6, color='tab:blue', linewidth=0))
 	for j in xrange(len(poly_pe_stratified)):
-		ax.add_collection(PatchCollection(poly_pe_stratified[j], alpha=POLY_PE_ALPHA[j], color='tab:blue', linewidth=0))
+		ax.add_collection(PatchCollection(poly_pe_stratified[j], alpha=POLY_PE_ALPHA[j], color='blue', linewidth=0))
 	ax.add_collection(PatchCollection(poly_sc, alpha=0.6, color='black', linewidth=2))
 	ax.add_collection(PatchCollection(poly_pb2, alpha=0.6, color='purple', linewidth=2))
 	ax.add_collection(PatchCollection(poly_pb1, alpha=0.6, color='red', linewidth=2))
@@ -718,7 +746,7 @@ for i in order_to_process_clusters:
 	legText = []
 	if max_pe:
 		allv += [n[0] for n in pe_to_report] + [n[1] for n in pe_to_report]
-		mpl.plot([-2,-1],[0,0],color='tab:blue')
+		mpl.plot([-2,-1],[0,0],color='blue')
 		legText.append('Discordant pairs')
 	if max_sc:
 		allv += [n[0] for n in sc_to_report] + [n[1] for n in sc_to_report]
@@ -823,7 +851,8 @@ bp_dev_ccs = [n for n in bp_dev_ccs if n <= 300]
 bp_dev_clr = [n for n in bp_dev_clr if n <= 300]
 print('=== BREAKPOINT DEVIATIONS:')
 if len(IN_SHORT):
-	print('short:', np.mean(bp_dev_sc))
+	if len(bp_dev_sc):
+		print('short:', np.mean(bp_dev_sc))
 if len(IN_LONG):
 	if len(bp_dev_ccs):
 		print('ccs:  ', np.mean(bp_dev_ccs))
@@ -836,10 +865,14 @@ for n in kv:
 
 if len(IN_SHORT) and len(IN_LONG):
 	print('')
-	print('avg sc vs. clr:', bp_dist_sc_clr, np.mean(bp_dist_sc_clr))
-	print('avg sc vs. ccs:', bp_dist_sc_ccs, np.mean(bp_dist_sc_ccs))
-	print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
-	print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
+	if len(bp_dist_sc_clr):
+		print('avg sc vs. clr:', bp_dist_sc_clr, np.mean(bp_dist_sc_clr))
+	if len(bp_dist_sc_ccs):
+		print('avg sc vs. ccs:', bp_dist_sc_ccs, np.mean(bp_dist_sc_ccs))
+	if len(bp_dist_min_sc_clr):
+		print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
+	if len(bp_dist_min_sc_ccs):
+		print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
 
 if len(args.c) or len(COMPARE):
 	print('')
