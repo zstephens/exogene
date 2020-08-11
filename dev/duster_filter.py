@@ -17,6 +17,7 @@ f1 = open(F_OUT,'w')
 f2 = open(F_RETAIN,'w')
 f3 = open(F_REMOVE,'w')
 current_readname = ''
+total_len        = 0
 for line in input_stream:
 	if line[0] == '>':
 		if current_readname != '':
