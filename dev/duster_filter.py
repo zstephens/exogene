@@ -19,18 +19,29 @@ f3 = open(F_REMOVE,'w')
 current_readname = ''
 for line in input_stream:
 	if line[0] == '>':
+		if current_readname != '':
+			f1.write(str(current_readname)+'\t'+str(low_complex)+'\t'+str(total_len)+'\n')
+			if float(low_complex)/float(total_len) <= THRESH:
+				f2.write(current_readname+'\n')
+			else:
+				f3.write(current_readname+'\n')
 		current_readname = line.strip()[1:]
+		low_complex      = 0
+		total_len        = 0
 	else:
 		rDat = line.strip()
-		low_complex  = rDat.count('a')
+		low_complex += rDat.count('a')
 		low_complex += rDat.count('c')
 		low_complex += rDat.count('g')
 		low_complex += rDat.count('t')
-		f1.write(str(current_readname)+'\t'+str(low_complex)+'\t'+str(len(rDat))+'\n')
-		if float(low_complex)/len(rDat) <= THRESH:
-			f2.write(current_readname+'\n')
-		else:
-			f3.write(current_readname+'\n')
+		total_len   += len(rDat)
+
+if total_len > 0:
+	f1.write(str(current_readname)+'\t'+str(low_complex)+'\t'+str(total_len)+'\n')
+	if float(low_complex)/float(total_len) <= THRESH:
+		f2.write(current_readname+'\n')
+	else:
+		f3.write(current_readname+'\n')
 
 f3.close()
 f2.close()
