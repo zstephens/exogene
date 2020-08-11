@@ -114,11 +114,13 @@ fi
 samtools=/opt/conda/envs/samtools/bin/samtools
 pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
 pbsv=/opt/conda/envs/pbmm2/bin/pbsv
+duster=/usr/bin/dustmasker
 
 # scripts
 grep_virus="python /home/exogene/dev/grep_virus_from_sam.py"
 gen_report="python /home/exogene/dev/plot_viral_long_reads.py"
 vcf_to_fa="python /home/exogene/dev/vcf_2_insfa.py"
+duster_filt="python /home/exogene/dev/duster_filter.py"
 
 # resources
 viral_db_json=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
@@ -129,7 +131,9 @@ cd $ARG_OUT
 # alignment
 if [ ! -f pbmm2_viralReads.sam ]; then
   if [ "$ARG_BAM" == "" ]; then
-    $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
+    if [ ! -f pbmm2_aln.bam ]; then
+      $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
+    fi
     $samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
     MY_BAM="pbmm2_aln.bam"
   else
@@ -158,3 +162,5 @@ if [ ! -f pbsv_ins_virus.sam ]; then
   $pbmm2 align $ARG_REF pbsv_ins.fa pbsv_ins.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
   $samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
 fi
+cat pbsv_ins_virus.sam | awk '{OFS="\t"; print ">"$1"\n"$10}' > duster.fa
+$duster -in duster.fa -outfmt fasta | $duster_filt 50 duster.out duster.retain duster.remove
