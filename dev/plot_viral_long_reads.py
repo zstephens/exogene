@@ -119,8 +119,8 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 #
 #
 #
-f_out  = open(OUT_REPORT,'w')
-f_out2 = open(OUT_DIR+'viral_sequences.fa','w')
+f_out  = open(OUT_REPORT, 'w')
+f_out2 = open(OUT_DIR+'viral_sequences.fa', 'w')
 nPlot  = 1
 for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 	#print k

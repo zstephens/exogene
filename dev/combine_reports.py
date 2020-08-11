@@ -167,6 +167,7 @@ parser.add_argument('-a',  type=str, required=False, metavar='<str>', help="path
 parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
+parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
 args = parser.parse_args()
 
 # basic parameters
@@ -242,7 +243,7 @@ INPUT_BAM = args.b
 #
 #
 
-MIN_LONG_READ_MAPQ = 3			# skip a junction if both ends are below this mapq
+MIN_LONG_READ_MAPQ = args.mq	# skip a junction if both ends are below this mapq
 PLOT_BUFF          = 100
 MAX_LONG_READ_GAP  = 1000		# skip human --> viral junctions that have more than this much unexplained read sequence between them
 MIN_SOFTCLIP       = args.ms
@@ -415,7 +416,7 @@ if len(IN_LONG):
 		qc2  = splt[4].split(',')
 		qc3  = splt[5]
 	
-		if 'ccs' in splt[0]:
+		if '/ccs' in splt[0]:
 			myType = 'CCS'
 		else:
 			myType = 'CLR'

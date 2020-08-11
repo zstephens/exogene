@@ -121,6 +121,7 @@ grep_virus="python /home/exogene/dev/grep_virus_from_sam.py"
 gen_report="python /home/exogene/dev/plot_viral_long_reads.py"
 vcf_to_fa="python /home/exogene/dev/vcf_2_insfa.py"
 duster_filt="python /home/exogene/dev/duster_filter.py"
+viral_ins="python /home/exogene/dev/append_viral_ins.py"
 
 # resources
 viral_db_json=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
@@ -153,7 +154,7 @@ if [ ! -f temp.svsig.gz ]; then
   $pbsv discover $pbsv_disc_preset $MY_BAM temp.svsig.gz
 fi
 if [ ! -f pbsv_out.vcf ]; then
-  $pbsv call $pbsv_call_preset -j 4 -t INS,DEL,INV,DUP,BND $ARG_REF temp.svsig.gz pbsv_out.vcf
+  $pbsv call $pbsv_call_preset -j 4 -t INS,DEL,INV,DUP,BND -A 1 -O 1 -S 0 -P 5 $ARG_REF temp.svsig.gz pbsv_out.vcf
 fi
 
 # extract large insertions to check for viral sequence
@@ -162,5 +163,10 @@ if [ ! -f pbsv_ins_virus.sam ]; then
   $pbmm2 align $ARG_REF pbsv_ins.fa pbsv_ins.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
   $samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
 fi
+# filter out low complexity insertions
 cat pbsv_ins_virus.sam | awk '{OFS="\t"; print ">"$1"\n"$10}' > duster.fa
 $duster -in duster.fa -outfmt fasta | $duster_filt 50 duster.out duster.retain duster.remove
+# convert to output format
+$viral_ins pbsv_ins_virus.sam duster.retain Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv $ARG_MODE
+cat Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv > combined.tsv
+mv combined.tsv Viral_Junctions_LongReads.tsv
