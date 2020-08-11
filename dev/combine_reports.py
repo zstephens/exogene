@@ -95,6 +95,8 @@ def parse_cigar_for_softclip(readDat):
 # returns reference span
 def parse_cigar_for_match(readDat):
 	cigar   = readDat[2]
+	if cigar == '*':
+		return 0
 	letters = re.split(r"\d+",cigar)[1:]
 	numbers = [int(n) for n in re.findall(r"\d+",cigar)]
 	adj = 0
@@ -368,7 +370,8 @@ if len(IN_SHORT):
 				if k in altc_byReadName:
 					if altc_byReadName[k][0] == r1[0] and abs(altc_byReadName[k][1]-r1[1]) <= tlen_mean+10*tlen_std:
 						sc3 = parse_cigar_for_softclip(altc_byReadName[k])
-						scDat = [r1[0], sc3[1], sc3[0], max([r2[3], altc_byReadName[k][3]])]	# use mapping quality of viral alignment (suppl guaranteed to be 0?)
+						if sc3[0] > 0:
+							scDat = [r1[0], sc3[1], sc3[0], max([r2[3], altc_byReadName[k][3]])]	# use mapping quality of viral alignment (suppl guaranteed to be 0?)
 
 				# paired-end evidence
 				span1 = parse_cigar_for_match(r1)

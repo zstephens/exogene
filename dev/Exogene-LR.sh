@@ -164,9 +164,11 @@ if [ ! -f pbsv_ins_virus.sam ]; then
   $samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
 fi
 # filter out low complexity insertions
-cat pbsv_ins_virus.sam | awk '{OFS="\t"; print ">"$1"\n"$10}' > duster.fa
-$duster -in duster.fa -outfmt fasta | $duster_filt 50 duster.out duster.retain duster.remove
-# convert to output format
-$viral_ins pbsv_ins_virus.sam duster.retain Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv $ARG_MODE
-cat Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv > combined.tsv
-mv combined.tsv Viral_Junctions_LongReads.tsv
+if [ ! -f Viral_Ins_LongReads.tsv ]; then
+  cat pbsv_ins_virus.sam | awk '{OFS="\t"; print ">"$1"\n"$10}' > duster.fa
+  $duster -in duster.fa -outfmt fasta | $duster_filt 50 duster.out duster.retain duster.remove
+  # convert to output format
+  $viral_ins pbsv_ins_virus.sam duster.retain Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv $ARG_MODE
+  cat Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv > combined.tsv
+  mv combined.tsv Viral_Junctions_LongReads.tsv
+fi

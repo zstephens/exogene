@@ -124,5 +124,9 @@ for k in sorted(outDat_by_rName.keys()):
 
 		outDat_by_rName[k] = [outDat_by_rName[k][0][0], outDat_by_rName[k][1][0]]
 		f.write('\t'.join(outDat_by_rName[k][0]) + '\t' + '\t'.join(outDat_by_rName[k][1]) + '\t' + alt_cigar + '\n')
+
+	else:
+		print 'missing mate:', k
+
 f2.close()
 f.close()
