@@ -168,7 +168,8 @@ parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR 
 parser.add_argument('-a',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
 parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
 parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
-parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event", default=5)
+parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
+parser.add_argument('-ml', type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
 parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
 args = parser.parse_args()
 
@@ -252,12 +253,16 @@ MIN_SOFTCLIP       = args.ms
 MIN_DISC_ONLY      = args.md	# if discordant reads are our only source of evidence, demand we have at least this many
 MIN_SOFTCLIP_SIZE  = 10			# minimum softclipped size for reads that aren't anchored in virus (proximal softclips)
 MIN_SOFTCLIP_MULT  = 2			# must have at least this many unanchored softclips at a particular coordinate
+MIN_LONG_PER_EVENT = args.ml
 
 if MIN_SOFTCLIP < 0:
 	print('Error: -ms must be > 0')
 	exit(1)
 if MIN_DISC_ONLY < 0:
 	print('Error: -md must be > 0')
+	exit(1)
+if MIN_LONG_PER_EVENT < 0:
+	print('Error: -ml must be > 0')
 	exit(1)
 if MIN_SOFTCLIP <= 0 and MIN_DISC_ONLY <= 0:
 	print('Error: either -ms or -md must be > 0')
@@ -690,7 +695,10 @@ for i in order_to_process_clusters:
 			continue
 		if MIN_SOFTCLIP <= 0 and not_enough_disc:
 			continue
-	else:
+		if MIN_LONG_PER_EVENT > 0:	# we have sufficient short read evidence, but no pacbio (and we want pacbio!)
+			continue
+
+	elif len(evidence_pb[i]) >= MIN_LONG_PER_EVENT:
 		ccs_coord_list = [n[0] for n in evidence_pb[i] if n[1] == 'CCS']
 		if len(ccs_coord_list) > 1:
 			scm = np.median(ccs_coord_list)

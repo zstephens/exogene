@@ -153,7 +153,7 @@ fgrep ">" viral_reads_se.fa | cut -b2- | sort | uniq > viral_reads_se.ids
 date >> software.log
 
 # run blast duster
-if [ ! -f viral_reads_se.ids.cleaned ]; then
+if [ ! -f viral_reads_se.keep ]; then
   echo "evaluating viral reads for repeats" >> software.log
   $duster -in viral_reads_se.fa -outfmt fasta | $duster_filt $ARG_DUSTER_FRAC duster.out duster.retain duster.remove
   cat duster.remove viral_reads_se.ids | sort | uniq -u > viral_reads_se.ids.cleaned
