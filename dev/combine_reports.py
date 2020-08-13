@@ -800,15 +800,6 @@ for i in order_to_process_clusters:
 	pe_count_by_class[myClass].append(myPECount)
 	#exit(1)
 
-	print('CLUSTER', str(i)+':', clustered_events[i][0][0], '-->', clustered_events[i][0][1], igv_pos, myClass)
-	print('== SOFTCLIP:  ', sc_to_report, max_sc)
-	print('== DISCORDANT:', pe_to_report, max_pe)
-	print('== PACBIO:    ', evidence_pb[i])
-	if len(sc_str): print(sc_str)
-	if len(ccs_str): print(ccs_str)
-	if len(clr_str): print(clr_str)
-	print('')
-
 	#
 	# bed intersection with average breakpoint position
 	#
@@ -826,10 +817,26 @@ for i in order_to_process_clusters:
 	bed_chr = clustered_events[i][0][0]
 	bed_pos = avg_all
 
-	####print(igv_pos + '\t',(max_pe, max_sc, len(poly_pb1), len(poly_pb2)))
-	####for bed_i in xrange(len(BED_TRACKS)):
-	####	if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
-	####		print('--',BED_TRACKS[bed_i][0])
+	# annotate!
+	bed_out = []
+	for bed_i in xrange(len(BED_TRACKS)):
+		if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
+			#print('--',BED_TRACKS[bed_i][0])
+			bed_out.append(BED_TRACKS[bed_i][0])
+
+	#
+	# PRINT BREAKPOINT SUMMARY
+	#
+	print('CLUSTER', str(i)+':', clustered_events[i][0][0], '-->', clustered_events[i][0][1], igv_pos, myClass)
+	print('== SOFTCLIP:  ', sc_to_report, max_sc)
+	print('== DISCORDANT:', pe_to_report, max_pe)
+	print('== PACBIO:    ', evidence_pb[i])
+	if len(sc_str): print(sc_str)
+	if len(ccs_str): print(ccs_str)
+	if len(clr_str): print(clr_str)
+	if len(bed_out): print(' '.join(bed_out))
+	print('')
+
 
 	BIG_VAL = 9999999
 	min_distance_between_sc_and_pb = BIG_VAL
@@ -858,6 +865,9 @@ for i in order_to_process_clusters:
 	#if min_distance_between_sc_and_pb < BIG_VAL:
 	#	print(igv_pos,'SC_PB_DIST =',min_distance_between_sc_and_pb)
 
+#
+# BREAKPOINT STATS
+#
 bp_dev_sc  = [n for n in bp_dev_sc if n <= 300]
 bp_dev_ccs = [n for n in bp_dev_ccs if n <= 300]
 bp_dev_clr = [n for n in bp_dev_clr if n <= 300]
@@ -871,10 +881,13 @@ if len(IN_LONG):
 	if len(bp_dev_clr):
 		print('clr:  ', np.mean(bp_dev_clr))
 
-kv = sorted([(class_counts[k],k) for k in class_counts.keys()], reverse=True)
-for n in kv:
-	print(n[0], n[1], 'sc_counts:', sc_count_by_class[n[1]], 'pe_counts:', pe_count_by_class[n[1]])
+#kv = sorted([(class_counts[k],k) for k in class_counts.keys()], reverse=True)
+#for n in kv:
+#	print(n[0], n[1], 'sc_counts:', sc_count_by_class[n[1]], 'pe_counts:', pe_count_by_class[n[1]])
 
+#
+# LONG READ BREAKPOINT STATS
+#
 if len(IN_SHORT) and len(IN_LONG):
 	print('')
 	if len(bp_dist_sc_clr):
@@ -885,7 +898,11 @@ if len(IN_SHORT) and len(IN_LONG):
 		print('min sc vs. clr:', bp_dist_min_sc_clr, np.mean(bp_dist_min_sc_clr))
 	if len(bp_dist_min_sc_ccs):
 		print('min sc vs. ccs:', bp_dist_min_sc_ccs, np.mean(bp_dist_min_sc_ccs))
+	print('')
 
+#
+# SRA COMPARISON
+#
 if len(args.c) or len(COMPARE):
 	print('')
 	print('### START_COMPARE ###')
@@ -902,3 +919,4 @@ if len(args.c) or len(COMPARE):
 	print('\n### NOT_IN_COMPARE ###\n')
 	for n in COMPARE_OUT_FP:
 		print(n[0], n[1], n[2], n[3])
+	print('')
