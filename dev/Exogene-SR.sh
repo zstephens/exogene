@@ -127,8 +127,16 @@ Please check the path to the specified output directory."
 fi
 
 # check samtools version (for samtools sort input syntax)
-sam_ver=$($samtools 2>&1 | grep "Version:" | cut -d " " -f 2 | cut -d "." -f 1,2)
-sam_is_new=$(echo "$sam_ver >= 1.3" | bc)
+sam_major=$($samtools 2>&1 | grep "Version:" | cut -d " " -f 2 | cut -d "." -f 1)
+sam_minor=$($samtools 2>&1 | grep "Version:" | cut -d " " -f 2 | cut -d "." -f 2)
+sam_minor=$(echo "$sam_minor < 3" | bc)
+if [ "$sam_major" == "0" ]; then
+  sam_is_new="0"
+elif [ "$sam_minor" == "1" ]; then
+  sam_is_new="0"
+else
+  sam_is_new="1"
+fi
 
 # create result folder
 name=exogeneSR
