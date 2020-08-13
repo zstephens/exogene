@@ -221,7 +221,7 @@ $samtools view ${name}_viral.bam | fgrep -f VReads_1.3 > VReads_1
 $viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
 rm VReads_*
 # run combine_reports.py with some lenient thresholds to spit out all integrations
-$combine_reports -s Viral_Reads_Report.tsv -o ExogeneSR_Results/ -ms 0 -md 2 
+$combine_reports -s Viral_Reads_Report.tsv -o ExogeneSR_Results/ -ms 2 -md 2 
 date >> software.log
 
 ##### create gene disturbance report

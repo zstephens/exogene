@@ -593,19 +593,18 @@ for i in order_to_process_clusters:
 		if len(sc_coord_list) > 1:
 			scm = np.median(sc_coord_list)
 			scl = [int(abs(n-scm)+0.5) for n in sc_coord_list]
-			#print('short sc:', int(scm), int(np.mean([abs(n-scm) for n in sc_coord_list])))
-			sc_str = 'short sc: ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + ', std: {0:.2f}'.format(np.mean(scl))
+			sc_str = 'type: shortread count: ' + str(len(scl)) + ' avg_pos: ' + str(int(scm+0.5)) + ' std: {0:.2f}'.format(np.mean(scl))
 			bp_dev_sc.extend(scl)
 			scm = int(scm+0.5)
 		elif len(sc_coord_list) == 1:
-			sc_str = 'short sc: ' + str(1) + ' ' + str(sc_coord_list[0]) + ' N/A'
+			sc_str = 'type: shortread count: ' + str(1) + ' avg_pos: ' + str(sc_coord_list[0]) + ' std: 0.00'
 			scm = sc_coord_list[0]
 			scl = [-1]
 
 		scm_closest   = sorted([(abs(scm-k_sc), k_sc) for k_sc in sc_mapq_byPos.keys()])[0][1]
 		mapq0_frac    = float(sc_mapq_byPos[scm_closest].count(0))/len(sc_mapq_byPos[scm_closest])
 		mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
-		sc_str += ', MAPQ=0: ' + mapq0_percent
+		sc_str += ' MAPQ0: ' + mapq0_percent
 
 		if (len(args.c) or len(COMPARE)) and len(scl) >= MIN_SOFTCLIP:
 			#sc_str += ' closest: ' + str(get_compare(clustered_events[i][0][0], int(scm+0.5)))
@@ -703,19 +702,19 @@ for i in order_to_process_clusters:
 		if len(ccs_coord_list) > 1:
 			scm = np.median(ccs_coord_list)
 			scl = [int(abs(n-scm)+0.5) for n in ccs_coord_list]
-			ccs_str = 'ccs sc:  ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + str(np.mean(scl))
+			ccs_str = 'type: longread-ccs count: ' + str(len(scl)) + ' avg_pos: ' + str(int(scm+0.5)) + ' std: ' + str(np.mean(scl))
 			bp_dev_ccs.extend(scl)
 		elif len(ccs_coord_list) == 1:
-			ccs_str = 'ccs sc:  ' + str(1) + ' ' + str(ccs_coord_list[0]) + ' N/A'
+			ccs_str = 'type: longread-ccs count: ' + str(1) + ' avg_pos: ' + str(ccs_coord_list[0]) + ' std: 0.00'
 
 		clr_coord_list = [n[0] for n in evidence_pb[i] if n[1] == 'CLR']
 		if len(clr_coord_list) > 1:
 			scm = np.median(clr_coord_list)
 			scl = [int(abs(n-scm)+0.5) for n in clr_coord_list]
-			clr_str = 'clr sc:  ' + str(len(scl)) + ' ' + str(int(scm+0.5)) + ' ' + str(np.mean(scl))
+			clr_str = 'type: longread-clr count: ' + str(len(scl)) + ' avg_pos: ' + str(int(scm+0.5)) + ' std: ' + str(np.mean(scl))
 			bp_dev_clr.extend(scl)
 		elif len(clr_coord_list) == 1:
-			clr_str = 'clr sc:  ' + str(1) + ' ' + str(clr_coord_list[0]) + ' N/A'
+			clr_str = 'type: longread-clr count: ' + str(1) + ' avg_pos: ' + str(clr_coord_list[0]) + ' std: 0.00'
 
 	#
 	#	PLOTTING
@@ -827,14 +826,15 @@ for i in order_to_process_clusters:
 	#
 	# PRINT BREAKPOINT SUMMARY
 	#
-	print('CLUSTER', str(i)+':', clustered_events[i][0][0], '-->', clustered_events[i][0][1], igv_pos, myClass)
-	print('== SOFTCLIP:  ', sc_to_report, max_sc)
-	print('== DISCORDANT:', pe_to_report, max_pe)
-	print('== PACBIO:    ', evidence_pb[i])
-	if len(sc_str): print(sc_str)
-	if len(ccs_str): print(ccs_str)
-	if len(clr_str): print(clr_str)
-	if len(bed_out): print(' '.join(bed_out))
+	print('CLUSTER', str(nPlot)+':', igv_pos)
+	print('== VIRUS:     ', clustered_events[i][0][1])
+	if max_sc > 0: print('== SOFTCLIP:  ', sc_to_report, max_sc)
+	if len(sc_str): print('==== ' + sc_str)
+	if max_pe > 0: print('== DISCORDANT:', pe_to_report, max_pe)
+	if len(evidence_pb[i]) > 0: print('== PACBIO:    ', evidence_pb[i])
+	if len(ccs_str): print('==== ' + ccs_str)
+	if len(clr_str): print('==== ' + clr_str)
+	if len(bed_out): print('== ANNOTATION:', ' '.join(bed_out))
 	print('')
 
 
