@@ -3,6 +3,10 @@ import os
 
 #python append_viral_ins.py pbsv_ins_virus.sam duster.retain Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv [hifi/clr]
 
+HUMAN_CHR  = [str(n) for n in range(1,22+1)] + ['X', 'Y']
+HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
+HUMAN_CHR  = {n:True for n in HUMAN_CHR}
+
 IN_SAM  = sys.argv[1]
 IN_DUST = sys.argv[2]
 IN_TSV  = sys.argv[3]
@@ -43,7 +47,9 @@ for line in f:
 		if splt[0] in read_whitelist:				# and we passed complexity filters
 			splt2 = splt[0].split('_')
 			r_ref = splt2[2]
-			r_pos = int(splt2[3])
+			if r_ref not in HUMAN_CHR:				# don't bother with virus-virus SVs
+				continue
+			r_pos = int(splt2[3])+1
 			any_hit = False
 			for n in existing_junctions:
 				if n[0] == r_ref and abs(r_pos - n[1]) <= BUFFER:

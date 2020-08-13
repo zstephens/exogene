@@ -61,22 +61,22 @@ if [ "$ARG_OUT" == "" ]; then
 fi
 
 # exes
-samtools=/research/bsi/tools/biotools/samtools/0.1.18/samtools
-bwa=/research/bsi/tools/biotools/bwa/0.7.17/bwa
-perl=/research/bsi/tools/biotools/perl/5.16.3/bin/perl
-duster=/research/bsi/tools/biotools/blast/2.6.0/bin/dustmasker
+samtools=/research/bsi/tools/biotools/samtools/1.10/bin/samtools
+bwa=/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/temp/bwa
+perl=/research/bsi/tools/biotools/perl/5.30.0/bin/perl
+duster=/research/bsi/tools/biotools/blast/2.10.0/bin/dustmasker
 awk=/bin/awk
-closestbed=/research/bsi/tools/biotools/bedtools/2.26.0/bin/closestBed
-intersectbed=/research/bsi/tools/biotools/bedtools/2.26.0/bin/intersectBed
-clusterbed=/research/bsi/tools/biotools/bedtools/2.26.0/bin/clusterBed
-mergeBed=/research/bsi/tools/biotools/bedtools/2.26.0/bin/mergeBed
-sortBed=/research/bsi/tools/biotools/bedtools/2.26.0/bin/sortBed
+closestbed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/closestBed
+intersectbed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/intersectBed
+clusterbed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/clusterBed
+mergeBed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/mergeBed
+sortBed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/sortBed
 
 # scripts
-duster_filt="/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7 /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/duster_filter.py"
-readlist_to_fq="/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7 /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/readlist_2_fq.py"
-readlist_to_fq_bam="/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7 /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/readlist_2_fq_from_bam.py"
-viralreads_to_report="/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7 /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_new/git/exogene/dev/createViralReadsReport.py"
+duster_filt="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/git/exogene/dev/duster_filter.py"
+readlist_to_fq="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/git/exogene/dev/readlist_2_fq.py"
+readlist_to_fq_bam="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/git/exogene/dev/readlist_2_fq_from_bam.py"
+viralreads_to_report="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_5new/git/exogene/dev/createViralReadsReport.py"
 
 # refs
 HVR=/research/bsi/projects/staff_analysis/m112876/Viral_Workflow/references/HumanViral_Reference_12-12-2018.fa
@@ -153,7 +153,7 @@ fgrep ">" viral_reads_se.fa | cut -b2- | sort | uniq > viral_reads_se.ids
 date >> software.log
 
 # run blast duster
-if [ ! -f viral_reads_se.ids.cleaned ]; then
+if [ ! -f viral_reads_se.keep ]; then
   echo "evaluating viral reads for repeats" >> software.log
   $duster -in viral_reads_se.fa -outfmt fasta | $duster_filt $ARG_DUSTER_FRAC duster.out duster.retain duster.remove
   cat duster.remove viral_reads_se.ids | sort | uniq -u > viral_reads_se.ids.cleaned
