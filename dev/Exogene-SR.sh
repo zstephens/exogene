@@ -2,7 +2,7 @@
 
 USAGE_1="Usage (bam): `basename $0` -b input.bam -r ref.fa -o output_dir/"
 USAGE_2="Usage (fq):  `basename $0` -f1 read1.fq.gz -f2 read2.fq.gz -r ref.fa -o output_dir/"
-USAGE_3="optional arguments: -k bwa_seed_size [30] -d duster_exclude_frac [70]"
+USAGE_3="optional arguments: -k bwa_seed_size [30] -d duster_exclude_frac [70] -t transcriptome_exclude_frac [90]"
 
 #input argument parsing
 ARG_BAM=""
@@ -14,6 +14,8 @@ ARG_OUT=""
 ARG_BWA_SEED=30
 # toss out reads where >70% is flagged by duster as low complexity
 ARG_DUSTER_FRAC=70
+# toss out reads where >90% aligns to transcriptome reference
+ARG_TRANSCRIPT_FRAC=90
 # read input args
 while [[ "$#" -gt 0 ]]; do case $1 in
   -b|--bam) ARG_BAM="$2"; shift;;
@@ -23,6 +25,7 @@ while [[ "$#" -gt 0 ]]; do case $1 in
   -o|--outdir) ARG_OUT="$2"; shift;;
   -k|--bwaseed) ARG_BWA_SEED="$2"; shift;;
   -d|--dusterfrac) ARG_DUSTER_FRAC="$2"; shift;;
+  -t|--transcriptfrac) ARG_TRANSCRIPT_FRAC="$2"; shift;;
   *) echo "Unknown parameter passed: $1"; exit 1;;
 esac; shift; done
 # ensure we're properly in BAM or FQ mode
@@ -209,14 +212,12 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
     $samtools sort Viral.bam Viral.sort
   fi
   $samtools index Viral.sort.bam
-  # discard reads which align to RNA reference, apparently
-  #$bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $perl -lane 'print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' > bad.list-tmp
-  #sort bad.list-tmp | uniq > bad.list
-  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $aln_match_filter 90 > bad.list
-  $samtools view -h Viral.sort.bam | fgrep -v -w -f bad.list > ${name}_viral.sam
+  # discard reads which align very well to transcriptome reference
+  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $aln_match_filter $ARG_TRANSCRIPT_FRAC > rna_hits.ids
+  $samtools view -h Viral.sort.bam | fgrep -v -w -f rna_hits.ids > ${name}_viral.sam
   $samtools view -Sb ${name}_viral.sam > ${name}_viral.bam
   $samtools index ${name}_viral.bam
-  rm Viral.bam bad.lis* ${name}_viral.sam
+  rm Viral.bam ${name}_viral.sam
 fi
 date >> software.log
 
@@ -321,7 +322,7 @@ date >> software.log
 
 # cleaning up temp files
 mkdir -p temp_files
-mv viral* duster.* Viral* temp_files/
+mv viral* duster.* Viral* rna_hits.* temp_files/
 #mv temp_files/Viral_Presence_Report.tsv ./
 mv temp_files/Viral_Reads_Report.tsv ./
 echo "Done!" >> software.log

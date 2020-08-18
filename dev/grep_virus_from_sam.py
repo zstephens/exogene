@@ -24,7 +24,7 @@ ks2 = sorted(REV_DICT_ABRV.keys())
 # replace all instances of annoyingly long viral ref names with shorthand
 #
 for line in input_stream:
-	if len(line) and line[0] != '#':
+	if len(line) and line[0] != '#' and line[0] != '@':
 		splt = line.strip().split('\t')
 		# replace refs in chr field
 		if splt[2] in REV_DICT:
