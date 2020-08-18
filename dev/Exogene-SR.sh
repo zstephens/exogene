@@ -76,6 +76,7 @@ sortBed=/opt/conda/envs/bedtools/bin/sortBed
 duster_filt="python /home/exogene/dev/duster_filter.py"
 readlist_to_fq="python /home/exogene/dev/readlist_2_fq.py"
 readlist_to_fq_bam="python /home/exogene/dev/readlist_2_fq_from_bam.py"
+aln_match_filter="python /home/exogene/dev/aln_match_filter.py"
 viralreads_to_report="python /home/exogene/dev/createViralReadsReport.py"
 combine_reports="python /home/exogene/dev/combine_reports.py"
 
@@ -209,8 +210,9 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   fi
   $samtools index Viral.sort.bam
   # discard reads which align to RNA reference, apparently
-  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $perl -lane' print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' > bad.list-tmp
-  sort bad.list-tmp | uniq > bad.list
+  #$bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $perl -lane 'print"$F[2]\t$F[0]\t$F[5]";' | egrep '^ENST' | cut -f2- | rev | cut -b2- | rev | $perl -lane 'if($F[1]>100){print"$F[0]"};' > bad.list-tmp
+  #sort bad.list-tmp | uniq > bad.list
+  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $aln_match_filter 90 > bad.list
   $samtools view -h Viral.sort.bam | fgrep -v -w -f bad.list > ${name}_viral.sam
   $samtools view -Sb ${name}_viral.sam > ${name}_viral.bam
   $samtools index ${name}_viral.bam
@@ -320,7 +322,7 @@ date >> software.log
 # cleaning up temp files
 mkdir -p temp_files
 mv viral* duster.* Viral* temp_files/
-mv temp_files/Viral_Presence_Report.tsv ./
+#mv temp_files/Viral_Presence_Report.tsv ./
 mv temp_files/Viral_Reads_Report.tsv ./
 echo "Done!" >> software.log
 date >> software.log
