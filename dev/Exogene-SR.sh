@@ -214,6 +214,8 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   $samtools index Viral.sort.bam
   # discard reads which align very well to transcriptome reference
   $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $aln_match_filter $ARG_TRANSCRIPT_FRAC > rna_hits.ids
+  # discard reads which align very well to decoy reference
+  $bwa mem -Y -k $ARG_BWA_SEED -t 4 $Decoy viral_reads_se.fa | $aln_match_filter $ARG_TRANSCRIPT_FRAC > decoy_hits.ids
   $samtools view -h Viral.sort.bam | fgrep -v -w -f rna_hits.ids > ${name}_viral.sam
   $samtools view -Sb ${name}_viral.sam > ${name}_viral.bam
   $samtools index ${name}_viral.bam
