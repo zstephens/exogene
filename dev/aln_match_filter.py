@@ -24,7 +24,7 @@ for line in input_stream:
 		matchPercent = 100.*(float(matchlen)/float(readlen))
 		if matchPercent >= thresh_percent:
 			bad_rname[splt[0]] = True
-		sys.stderr.write(' '.join([str(n) for n in [cigar, matchlen, readlen, matchPercent]])+'\n')
+		#sys.stderr.write(' '.join([str(n) for n in [cigar, matchlen, readlen, matchPercent]])+'\n')
 
 for k in sorted(bad_rname.keys()):
 	sys.stdout.write(k + '\n')

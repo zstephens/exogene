@@ -216,10 +216,11 @@ if [ ! -f ${name}_viral.bam ] || [ ! -f bwa.log ]; then
   $bwa mem -Y -k $ARG_BWA_SEED -t 4 $RNA viral_reads_se.fa | $aln_match_filter $ARG_TRANSCRIPT_FRAC > rna_hits.ids
   # discard reads which align very well to decoy reference
   $bwa mem -Y -k $ARG_BWA_SEED -t 4 $Decoy viral_reads_se.fa | $aln_match_filter $ARG_TRANSCRIPT_FRAC > decoy_hits.ids
-  $samtools view -h Viral.sort.bam | fgrep -v -w -f rna_hits.ids > ${name}_viral.sam
+  sort rna_hits.ids decoy_hits.ids | uniq > bad.list
+  $samtools view -h Viral.sort.bam | fgrep -v -w -f bad.list > ${name}_viral.sam
   $samtools view -Sb ${name}_viral.sam > ${name}_viral.bam
   $samtools index ${name}_viral.bam
-  rm Viral.bam ${name}_viral.sam
+  rm Viral.bam ${name}_viral.sam bad.list
 fi
 date >> software.log
 
@@ -324,7 +325,7 @@ date >> software.log
 
 # cleaning up temp files
 mkdir -p temp_files
-mv viral* duster.* Viral* rna_hits.* temp_files/
+mv viral* duster.* Viral* *_hits.ids temp_files/
 #mv temp_files/Viral_Presence_Report.tsv ./
 mv temp_files/Viral_Reads_Report.tsv ./
 echo "Done!" >> software.log
