@@ -902,7 +902,7 @@ header = ('CHR', 'INTEGRATION_POS', 'VIRUS', 'ANNOTATION',
           'SOFTCLIP_POS', '#SOFTCLIP',
           'DISCORDANT_POS', '#DISCORDANT',
           'LONGREAD_POS', '#LONGREAD')
-f = open(OUT_DIR+'integrations.txt', 'r')
+f = open(OUT_DIR+'integrations.txt', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:
 	f.write('\t'.join(n)+'\n')
