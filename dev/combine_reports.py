@@ -171,6 +171,7 @@ parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min 
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
 parser.add_argument('-ml', type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
 parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
+parser.add_argument('--report-exclude', required=False, action='store_true', default=False, help='output bed-excluded integration sites')
 args = parser.parse_args()
 
 # basic parameters
@@ -208,8 +209,8 @@ BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed', 
               ['gap',         MappabilityTrack(BED_DIR + 'hg38_gap.bed',                 bed_buffer=1000)],
               ['repeats',     MappabilityTrack(BED_DIR + 'hg38_simpleRepeats.bed',       bed_buffer=50)],
               ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappability.bed', bed_buffer=50)],
-              ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',    bed_buffer=500)],
-              ['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',     bed_buffer=10)]]
+              ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',    bed_buffer=500)]]
+              #['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',     bed_buffer=10)]]
 
 # read in viral short-hand that I used for the long read workflow
 VIRAL_JSON = args.v1
@@ -254,6 +255,8 @@ MIN_DISC_ONLY      = args.md	# if discordant reads are our only source of eviden
 MIN_SOFTCLIP_SIZE  = 10			# minimum softclipped size for reads that aren't anchored in virus (proximal softclips)
 MIN_SOFTCLIP_MULT  = 2			# must have at least this many unanchored softclips at a particular coordinate
 MIN_LONG_PER_EVENT = args.ml
+
+REPORT_ALL_BEDHITS = args.report_exclude
 
 if MIN_SOFTCLIP < 0:
 	print('Error: -ms must be > 0')
@@ -784,11 +787,6 @@ for i in order_to_process_clusters:
 
 	igv_pos = clustered_events[i][0][0] + ':' + str(min(allv)-PLOT_BUFF) + '-' + str(max(allv)+PLOT_BUFF)
 
-	#mpl.show()
-	mpl.savefig(OUT_DIR+'event_'+str(nPlot).zfill(zfill_num)+'_'+igv_pos.replace(':','_')+'.png')
-	nPlot += 1
-	mpl.close(fig)
-
 	myClass = (1*(len(poly_sc) > 0), 1*(len(poly_pe) > 0), 1*(len(poly_pb1) > 0), 1*(len(poly_pb2) > 0))
 	if myClass not in class_counts:
 		class_counts[myClass] = 0
@@ -827,46 +825,58 @@ for i in order_to_process_clusters:
 	#
 	# PRINT BREAKPOINT SUMMARY
 	#
-	print('CLUSTER', str(nPlot)+':', igv_pos)
-	print('== VIRUS:     ', clustered_events[i][0][1])
-	if max_sc > 0: print('== SOFTCLIP:  ', sc_to_report, max_sc)
-	if len(sc_str): print('==== ' + sc_str)
-	if max_pe > 0: print('== DISCORDANT:', pe_to_report, max_pe)
-	if len(evidence_pb[i]) > 0: print('== PACBIO:    ', evidence_pb[i])
-	if len(ccs_str): print('==== ' + ccs_str)
-	if len(clr_str): print('==== ' + clr_str)
-	if len(bed_out): print('== ANNOTATION:', ' '.join(bed_out))
-	print('')
+	if len(bed_out) == 0 or REPORT_ALL_BEDHITS:
+		print('CLUSTER', str(nPlot)+':', igv_pos)
+		print('== VIRUS:     ', clustered_events[i][0][1])
+		if max_sc > 0: print('== SOFTCLIP:  ', sc_to_report, max_sc)
+		if len(sc_str): print('==== ' + sc_str)
+		if max_pe > 0: print('== DISCORDANT:', pe_to_report, max_pe)
+		if len(evidence_pb[i]) > 0: print('== PACBIO:    ', evidence_pb[i])
+		if len(ccs_str): print('==== ' + ccs_str)
+		if len(clr_str): print('==== ' + clr_str)
+		if len(bed_out): print('== ANNOTATION:', ' '.join(bed_out))
+		print('')
 
 	#
 	# DATA FOR OUTPUT REPORT
 	#
-	# (CHR, INTEGRATION_POS, VIRUS, ANNOTATION, SOFTCLIP_POS, #SOFTCLIP, DISCORDANT_POS, #DISCORDANT, LONGREAD_POS, #LONGREAD)
-	out_chr = clustered_events[i][0][0]
-	out_pos = '-'
-	out_vir = clustered_events[i][0][1]
-	out_ann = ','.join(bed_out)
-	#
-	(out_scp, out_scc) = ('-', '0')
-	if len(sc_str):
-		out_scp = sc_str.split(' ')[5]
-		out_scc = sc_str.split(' ')[3]
-		out_pos = sc_str.split(' ')[5]
-	#
-	out_dip = '-'
-	if max_pe > 0:
-		out_dip = ','.join([str(n[0])+'-'+str(n[1]) for n in pe_to_report])
-	out_dic = str(max_pe)
-	#
-	out_lrp = '-'
-	if len(clr_str):
-		out_lrp = clr_str.split(' ')[5]
-	if len(ccs_str):	# prio ccs result over clr
-		out_lrp = ccs_str.split(' ')[5]
-		out_pos = ccs_str.split(' ')[5]
-	out_lrc = str(len(evidence_pb[i]))
-	#
-	out_report_data.append((out_chr, out_pos, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc))
+	# (CHR, INTEGRATION_POS, #READS, VIRUS, ANNOTATION, SOFTCLIP_POS, #SOFTCLIP, DISCORDANT_POS, #DISCORDANT, LONGREAD_POS, #LONGREAD)
+	if len(bed_out) == 0 or REPORT_ALL_BEDHITS:
+		out_chr = clustered_events[i][0][0]
+		out_pos = '-'
+		out_num = str(max_pe + len(evidence_pb[i]))
+		out_vir = clustered_events[i][0][1]
+		out_ann = '-'
+		if len(bed_out):
+			out_ann = ','.join(bed_out)
+		#
+		(out_scp, out_scc) = ('-', '0')
+		if len(sc_str):
+			out_scp = sc_str.split(' ')[5]
+			out_scc = sc_str.split(' ')[3]
+			out_pos = sc_str.split(' ')[5]
+		#
+		out_dip = '-'
+		if max_pe > 0:
+			out_dip = ','.join([str(n[0])+'-'+str(n[1]) for n in pe_to_report])
+		out_dic = str(max_pe)
+		#
+		out_lrp = '-'
+		if len(clr_str):
+			out_lrp = clr_str.split(' ')[5]
+			if out_pos == '-':
+				out_pos = clr_str.split(' ')[5]
+		if len(ccs_str):	# prio ccs result over clr
+			out_lrp = ccs_str.split(' ')[5]
+			out_pos = ccs_str.split(' ')[5]
+		out_lrc = str(len(evidence_pb[i]))
+		#
+		out_report_data.append((out_chr, out_pos, out_num, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc))
+
+		#mpl.show()
+		mpl.savefig(OUT_DIR+'site_'+str(nPlot).zfill(zfill_num)+'_'+igv_pos.replace(':','_')+'.png')
+		nPlot += 1
+	mpl.close(fig)
 
 	BIG_VAL = 9999999
 	min_distance_between_sc_and_pb = BIG_VAL
@@ -898,7 +908,7 @@ for i in order_to_process_clusters:
 #
 # WRITE OUTPUT REPORT
 #
-header = ('CHR', 'INTEGRATION_POS', 'VIRUS', 'ANNOTATION',
+header = ('CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'ANNOTATION',
           'SOFTCLIP_POS', '#SOFTCLIP',
           'DISCORDANT_POS', '#DISCORDANT',
           'LONGREAD_POS', '#LONGREAD')
