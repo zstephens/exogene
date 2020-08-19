@@ -547,6 +547,7 @@ bp_dev_ccs = []
 bp_dev_clr = []
 sc_count_by_class = {}
 pe_count_by_class = {}
+out_report_data = []
 for i in order_to_process_clusters:
 
 	#print(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
@@ -837,6 +838,35 @@ for i in order_to_process_clusters:
 	if len(bed_out): print('== ANNOTATION:', ' '.join(bed_out))
 	print('')
 
+	#
+	# DATA FOR OUTPUT REPORT
+	#
+	# (CHR, INTEGRATION_POS, VIRUS, ANNOTATION, SOFTCLIP_POS, #SOFTCLIP, DISCORDANT_POS, #DISCORDANT, LONGREAD_POS, #LONGREAD)
+	out_chr = clustered_events[i][0][0]
+	out_pos = '-'
+	out_vir = clustered_events[i][0][1]
+	out_ann = ','.join(bed_out)
+	#
+	(out_scp, out_scc) = ('-', '0')
+	if len(sc_str):
+		out_scp = sc_str.split(' ')[5]
+		out_scc = sc_str.split(' ')[3]
+		out_pos = sc_str.split(' ')[5]
+	#
+	out_dip = '-'
+	if max_pe > 0:
+		out_dip = ','.join([str(n[0])+'-'+str(n[1]) for n in pe_to_report])
+	out_dic = str(max_pe)
+	#
+	out_lrp = '-'
+	if len(clr_str):
+		out_lrp = clr_str.split(' ')[5]
+	if len(ccs_str):	# prio ccs result over clr
+		out_lrp = ccs_str.split(' ')[5]
+		out_pos = ccs_str.split(' ')[5]
+	out_lrc = str(len(evidence_pb[i]))
+	#
+	out_report_data.append((out_chr, out_pos, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc))
 
 	BIG_VAL = 9999999
 	min_distance_between_sc_and_pb = BIG_VAL
@@ -864,6 +894,19 @@ for i in order_to_process_clusters:
 					min_distance_between_sc_and_pb = pDist
 	#if min_distance_between_sc_and_pb < BIG_VAL:
 	#	print(igv_pos,'SC_PB_DIST =',min_distance_between_sc_and_pb)
+
+#
+# WRITE OUTPUT REPORT
+#
+header = ('CHR', 'INTEGRATION_POS', 'VIRUS', 'ANNOTATION',
+          'SOFTCLIP_POS', '#SOFTCLIP',
+          'DISCORDANT_POS', '#DISCORDANT',
+          'LONGREAD_POS', '#LONGREAD')
+f = open(OUT_DIR+'integrations.txt', 'r')
+f.write('\t'.join(header)+'\n')
+for n in out_report_data:
+	f.write('\t'.join(n)+'\n')
+f.close()
 
 #
 # BREAKPOINT STATS
