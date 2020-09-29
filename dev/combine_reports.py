@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import gzip
 import json
 import argparse
 import numpy as np
@@ -137,6 +138,24 @@ def sorted_coord_list_to_ranges(l):
 		outRanges.append((ind,l[-1]))
 	return outRanges
 
+def get_nearest_transcript(myChr, pos, bedDat, max_dist=20000):
+	if myChr in bedDat:
+		# lazy and slow, but it gets the job done!
+		closest_dist = 99999999999
+		closest_meta = ''
+		for n in bedDat[myChr]:
+			if pos >= n[0] and pos <= n[1]:
+				closest_dist = 0
+				closest_meta = [n[2], n[3]]
+				break
+			my_dist = min([abs(pos-n[0]), abs(pos-n[1])])
+			if my_dist < closest_dist:
+				closest_dist = my_dist
+				closest_meta = [n[2], n[3]]
+		if closest_dist <= max_dist:
+			return (closest_dist, closest_meta)
+	return None
+
 def makedir(d):
 	if not os.path.isdir(d):
 		os.system('mkdir '+d)
@@ -211,6 +230,16 @@ BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed', 
               ['mappability', MappabilityTrack(BED_DIR + 'hg38_e2_l400_mappability.bed', bed_buffer=50)],
               ['exclude',     MappabilityTrack(BED_DIR + 'Merged_ExcludeRegions.bed',    bed_buffer=500)]]
               #['satellites',  MappabilityTrack(BED_DIR + 'hg38_microsatellites.bed',     bed_buffer=10)]]
+
+# track for finding nearest-gene
+TRANSCRIPT_TRACK = {}
+f = gzip.open(BED_DIR + 'transcripts_hg38.bed.gz', 'r')
+for line in f:
+	splt = line.strip().split('\t')
+	if splt[0] not in TRANSCRIPT_TRACK:
+		TRANSCRIPT_TRACK[splt[0]] = []
+	TRANSCRIPT_TRACK[splt[0]].append([int(splt[1]), int(splt[2]), splt[3], splt[4]])
+f.close()
 
 # read in viral short-hand that I used for the long read workflow
 VIRAL_JSON = args.v1
@@ -840,7 +869,7 @@ for i in order_to_process_clusters:
 	#
 	# DATA FOR OUTPUT REPORT
 	#
-	# (CHR, INTEGRATION_POS, #READS, VIRUS, ANNOTATION, SOFTCLIP_POS, #SOFTCLIP, DISCORDANT_POS, #DISCORDANT, LONGREAD_POS, #LONGREAD)
+	# (CHR, INTEGRATION_POS, #READS, VIRUS, ANNOTATION, SOFTCLIP_POS, #SOFTCLIP, DISCORDANT_POS, #DISCORDANT, LONGREAD_POS, #LONGREAD, NEAREST_GENE)
 	if len(bed_out) == 0 or REPORT_ALL_BEDHITS:
 		out_chr = clustered_events[i][0][0]
 		out_pos = '-'
@@ -871,7 +900,12 @@ for i in order_to_process_clusters:
 			out_pos = ccs_str.split(' ')[5]
 		out_lrc = str(len(evidence_pb[i]))
 		#
-		out_report_data.append((out_chr, out_pos, out_num, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc))
+		out_nge = '-'
+		nearest_hit = get_nearest_transcript(out_chr, int(out_pos), TRANSCRIPT_TRACK)
+		if nearest_hit != None:
+			out_nge = nearest_hit[1][1] + ' (' + nearest_hit[1][0] + ')'
+		#
+		out_report_data.append((out_chr, out_pos, out_num, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc, out_nge))
 
 		#mpl.show()
 		mpl.savefig(OUT_DIR+'site_'+str(nPlot).zfill(zfill_num)+'_'+igv_pos.replace(':','_')+'.png')
@@ -911,7 +945,8 @@ for i in order_to_process_clusters:
 header = ('CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'ANNOTATION',
           'SOFTCLIP_POS', '#SOFTCLIP',
           'DISCORDANT_POS', '#DISCORDANT',
-          'LONGREAD_POS', '#LONGREAD')
+          'LONGREAD_POS', '#LONGREAD',
+          'NEAREST_GENE')
 f = open(OUT_DIR+'integrations.txt', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:

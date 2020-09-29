@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import gzip
 import argparse
 
 import numpy as np
@@ -53,6 +54,24 @@ def makedir(d):
 	if not os.path.isdir(d):
 		os.system('mkdir '+d)
 
+def get_nearest_transcript(myChr, pos, bedDat, max_dist=20000):
+	if myChr in bedDat:
+		# lazy and slow, but it gets the job done!
+		closest_dist = 99999999999
+		closest_meta = ''
+		for n in bedDat[myChr]:
+			if pos >= n[0] and pos <= n[1]:
+				closest_dist = 0
+				closest_meta = [n[2], n[3]]
+				break
+			my_dist = min([abs(pos-n[0]), abs(pos-n[1])])
+			if my_dist < closest_dist:
+				closest_dist = my_dist
+				closest_meta = [n[2], n[3]]
+		if closest_dist <= max_dist:
+			return (closest_dist, closest_meta)
+	return None
+
 """//////////////////////////////////////////////////
 ////////////    PARSE INPUT ARGUMENTS    ////////////
 //////////////////////////////////////////////////"""
@@ -68,6 +87,18 @@ OUT_DIR    = args.p
 if OUT_DIR[-1] != '/':
 	OUT_DIR += '/'
 makedir(OUT_DIR)
+
+# track for finding nearest-gene
+SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
+BED_DIR = SIM_PATH + 'resources/'
+TRANSCRIPT_TRACK = {}
+f = gzip.open(BED_DIR + 'transcripts_hg38.bed.gz', 'r')
+for line in f:
+	splt = line.strip().split('\t')
+	if splt[0] not in TRANSCRIPT_TRACK:
+		TRANSCRIPT_TRACK[splt[0]] = []
+	TRANSCRIPT_TRACK[splt[0]].append([int(splt[1]), int(splt[2]), splt[3], splt[4]])
+f.close()
 
 # [readpos_start, readpos_end, ref, pos_start, pos_end, orientation, mapq]
 ALIGNMENTS_BY_RNAME = {}
@@ -120,7 +151,9 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 #
 #
 f_out  = open(OUT_REPORT, 'w')
-f_out2 = open(OUT_DIR+'viral_sequences.fa', 'w')
+vseq_out = {}
+DELIM_MAJOR = '='
+DELIM_MINOR = '-'
 nPlot  = 1
 for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 	#print k
@@ -155,21 +188,55 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 					viral_spans[-1].append(i)
 				else:
 					viral_spans.append([i])
-	print abns_k
-	print viral_spans
-	print ''
+
+	#print abns_k
+	#print viral_spans
+	#print ''
 	for n in viral_spans:
-		(anchored_left, anchored_right) = (False, False)
-		if n[0] > 0:
+
+		(anchored_left, anchored_right)  = (False, False)
+		(anchorseq_left, anchorseq_right) = ('', '')
+		affected_genes = []
+		if min(n) > 0:
 			anchored_left = True
-		if n[-1] < len(abns_k)-1:
+			# anchor seq format: "chr:pos:orr:gap:nearest_gene"
+			a = abns_k[min(n)-1]
+			out_nge = ''
+			nearest_hit = get_nearest_transcript(a[2], a[4], TRANSCRIPT_TRACK)
+			if nearest_hit != None:
+				out_nge = nearest_hit[1][1]
+				affected_genes.append(out_nge)
+			anchorseq_left = a[2] + ':' + str(a[4]) + ':' + a[5] + ':' + str(abns_k[min(n)][0] - a[1]) + ':' + out_nge
+		if max(n) < len(abns_k)-1:
 			anchored_right = True
+			# anchor seq format: "chr:pos:orr:gap:nearest_gene"
+			a = abns_k[max(n)+1]
+			out_nge = ''
+			nearest_hit = get_nearest_transcript(a[2], a[3], TRANSCRIPT_TRACK)
+			if nearest_hit != None:
+				out_nge = nearest_hit[1][1]
+				affected_genes.append(out_nge)
+			anchorseq_right = a[2] + ':' + str(a[3]) + ':' + a[5] + ':' + str(a[0] - abns_k[max(n)][1]) + ':' + out_nge
+
 		myAnchor = 'l'*anchored_left+'r'*anchored_right
-		seq_name = '-'.join([abns_k[m][2] for m in n]) + '_' + '-'.join([str(m) for m in n]) +'_' + k + '_' + myAnchor
+
+		seq_name  = ''
+		seq_name += k + DELIM_MAJOR												# read name
+		seq_name += DELIM_MINOR.join([abns_k[m][2] for m in n]) + DELIM_MAJOR	# viral refs this read spans
+		#seq_name += DELIM_MINOR.join([str(m) for m in n]) + DELIM_MAJOR		# aln num of viral alignments (out of all alignments in the read)
+		seq_name += myAnchor										# anchored on left, right, or both?
+		if len(anchorseq_left):
+			seq_name += DELIM_MAJOR + anchorseq_left
+		if len(anchorseq_right):
+			seq_name += DELIM_MAJOR + anchorseq_right
+
 		seq_dat  = READDAT_BY_RNAME[k][abns_k[n[0]][0]:abns_k[n[-1]][1]]
 		if len(seq_dat) >= 400:
-			f_out2.write('>'+seq_name+'\n')
-			f_out2.write(seq_dat+'\n')
+			gk = ','.join(affected_genes)
+			if gk not in vseq_out:
+				vseq_out[gk] = []
+			vseq_out[gk].append('>'+seq_name+'\n')
+			vseq_out[gk].append(seq_dat+'\n')
 
 	BN = -0.05 * READLEN_BY_RNAME[k]
 	BP =  0.05 * READLEN_BY_RNAME[k]
@@ -221,6 +288,10 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 	mpl.savefig(OUT_DIR+'read_'+str(nPlot)+'.png')
 	nPlot += 1
 	mpl.close(fig)
+f_out.close()
 
-f_out2.close()
+f_out = open(OUT_DIR+'viral_sequences.fa', 'w')
+for k in sorted(vseq_out.keys()):
+	for n in vseq_out[k]:
+		f_out.write(n)
 f_out.close()
