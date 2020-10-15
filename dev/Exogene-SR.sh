@@ -10,6 +10,7 @@ ARG_R1=""
 ARG_R2=""
 ARG_REF=""
 ARG_OUT=""
+DELETE_TEMP="true"
 # bwa seed size
 ARG_BWA_SEED=30
 # toss out reads where >70% is flagged by duster as low complexity
@@ -244,9 +245,13 @@ date >> software.log
 #
 # CLEAN UP TEMP FILES
 #
-mkdir -p temp_files
-mv viral* duster.* Viral* *_hits.ids temp_files/
-#mv temp_files/Viral_Presence_Report.tsv ./
-mv temp_files/Viral_Reads_Report.tsv ./
+if [ "$DELETE_TEMP" == "false" ]; then
+  mkdir -p temp_files
+  mv viral* duster.* Viral* *_hits.ids temp_files/
+  #mv temp_files/Viral_Presence_Report.tsv ./
+  mv temp_files/Viral_Reads_Report.tsv ./
+elif [ "$DELETE_TEMP" == "true" ]; then
+  echo hello
+fi
 echo "Done!" >> software.log
 date >> software.log
