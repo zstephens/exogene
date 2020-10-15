@@ -241,92 +241,9 @@ cat results/integrations.txt
 echo ""
 date >> software.log
 
-##### create gene disturbance report
-####$samtools view ${name}_viral.bam | $perl -lane 'print"$F[2]\t$_";' | egrep -v '^chr' | cut -f2 | sort | uniq > genes.virreads
-####$samtools view -H ${name}_viral.bam > genes.sam
-####$samtools view ${name}_viral.bam | $perl -lane 'print"$F[2]\t$_";' | egrep '^chr' | fgrep -f genes.virreads | cut -f2- >> genes.sam
-####$samtools view -Sb genes.sam > genes.bam
-####$intersectbed -loj -bed -abam genes.bam -b $Genes1KB > genes.bed
-####cut -f16 genes.bed | sort | uniq -c | $perl -lane 'print"$F[0]\t$F[1]";' | sort -k2,2 > genes.hits
-####printf "Gene\tSupporting_Reads_1KB\tChr\tGene_Start\tGene_End\n" > Gene_Disturbance_Report.tsv
-####join -1 2 -2 4 genes.hits $GenesGS | tr ' ' '\t' | sort -k2nr,2 >> Gene_Disturbance_Report.tsv
-####rm genes*
-####echo "evaluated viral integration support within gene regions" >> software.log
-####date >> software.log
-####
-##### create viral presence summary report
-####$samtools view ${name}_viral.bam | cut -f1,3 | $perl -lane 'print"$F[1]\t$F[0]";' | egrep -v '^chr' | sort -k1,1 -k2,2 | uniq | cut -f1 | uniq -c | $perl -lane 'print"$F[1]\t$F[0]";' | sort -k1,1 > viralpresence.hits
-####printf "Accession\tSupporting_Reads\tVirus_Description\n" > Viral_Presence_Report.tsv
-####join -1 1 -2 1 viralpresence.hits $ViralKey | tr ' ' '\t' | tr '!' ' ' | sort -k2nr,2 >> Viral_Presence_Report.tsv
-####rm viralpresence*
-####echo "created viral presence summary report" >> software.log
-####date >> software.log
-
-##### create gene integration report
-#####    creating the virpos tmp file
-####$samtools view ${name}_viral.bam | $perl -lane '$math=$F[7]+1;if(($F[2]!~/^chr/)&($F[6]=~/^chr/)){print"$F[6]\t$F[7]\t$math\t$F[2]"};' | sed s/'chr'//g | sed s/'^X'/'23'/g | egrep -v '^[a-z]|^[A-Z]|random' | sort -k1n,1 -k2n,2 | $perl -lane 'print"chr$_";' | sed s/'chr23'/'chrX'/g > tmp_1
-####$clusterbed -d 500 -i tmp_1 | $perl -lane 'print"$_\t$F[3]-$F[4]";' > tmp_2
-####cut -f6 tmp_2 | sort | uniq -c | sort -nr | $perl -lane 'print"$F[0]\t$F[1]";' > tmp_3
-####echo "" > tmp_4; sed -i '1d' tmp_4
-####cut -f2 tmp_3 | while read i; do fgrep -w $i tmp_2 | sort -R | head -1 >> tmp_4; done
-####paste tmp_3 tmp_4 | $perl -lane 'print"$F[2]\t$F[3]\t$F[4]\t$F[5]\t$F[0]";' | sort -k1,1 -k2n,2 > tmp_5
-####$closestbed -d -a tmp_5 -b $GenesGSs | cut -f1,2,4,5,9,10 > tmp_6
-####printf "chr\tintegration_site\tviral_accession\tsupporting_reads\tnearest_gene\tdistance\n" > tmp_7-virpos
-####sort -k4nr,4 -k5,5 tmp_6 >> tmp_7-virpos
-####rm tmp_4
-#####    creating the humpos tmp file
-####$samtools view ${name}_viral.bam | $perl -lane '$math=$F[3]+1;if(($F[2]=~/^chr/)&(($F[6]!~/^chr/)&($F[6]ne"="))){print"$F[2]\t$F[3]\t$math\t$F[6]"};' | sed s/'chr'//g | sed s/'^X'/'23'/g | egrep -v '^[a-z]|^[A-Z]|random' | sort -k1n,1 -k2n,2 | $perl -lane 'print"chr$_";' | sed s/'chr23'/'chrX'/g > tmp_1
-####$clusterbed -d 500 -i tmp_1 | $perl -lane 'print"$_\t$F[3]-$F[4]";' > tmp_2
-####cut -f6 tmp_2 | sort | uniq -c | sort -nr | $perl -lane 'print"$F[0]\t$F[1]";' > tmp_3
-####echo "" > tmp_4; sed -i '1d' tmp_4
-####cut -f2 tmp_3 | while read i; do fgrep -w $i tmp_2 | sort -R | head -1 >> tmp_4; done
-####paste tmp_3 tmp_4 | $perl -lane 'print"$F[2]\t$F[3]\t$F[4]\t$F[5]\t$F[0]";' | sort -k1,1 -k2n,2 > tmp_5
-####$closestbed -d -a tmp_5 -b $GenesGSs | cut -f1,2,4,5,9,10 > tmp_6
-####printf "chr\tintegration_site\tviral_accession\tsupporting_reads\tnearest_gene\tdistance\n" > tmp_7-humpos
-####sort -k4nr,4 -k5,5 tmp_6 >> tmp_7-humpos
-#####    creating the merged report
-####sed '1d' tmp_7-humpos | $perl -lane '$start=$F[1]-500;$end=$F[1]+500;print"$F[0]\t$start\t$end\t$F[2]\t$F[3]\t$F[4]\t$F[5]";' > tmp_8-humpos
-####sed '1d' tmp_7-virpos | $perl -lane '$start=$F[1]-500;$end=$F[1]+500;print"$F[0]\t$start\t$end\t$F[2]\t$F[3]\t$F[4]\t$F[5]";' > tmp_8-virpos
-####printf "Chr\tIntegration_Site\tViral_Accession\tHuman_Read_Support\tViral_Read_Support\tNearest_Gene\tDistance\n" > tmp_9-integrations
-####$intersectbed -wao -a tmp_8-humpos -b tmp_8-virpos | $perl -lane '$math1=($F[1]+500);$math2=($F[8]+500);$math3=(($math1+$math2)/2);$math4=(($F[6]+$F[13])/2);$math5=(abs($math2-$math1));if(($math5<500)&($F[3]eq$F[10])&($F[5]eq$F[12])){print"$F[0]\t$math3\t$F[3]\t$F[4]\t$F[11]\t$F[12]\t$math4"};' | sed s/'\.[0-9]'//g | sed s/'^chr'//g | sed s/'^X'/'23'/g | sort -k1n,1 -k2n,2 -k3,3 | $perl -lane 'print"chr$_";' | sed s/'chr23'/'chrX'/g >> tmp_9-integrations
-####echo "Virus_Description" > tmp_10
-####sed '1d' tmp_9-integrations | cut -f3 | while read i; do fgrep -w $i Viral_Presence_Report.tsv | head -1 | cut -f3-; done >> tmp_10
-####paste tmp_9-integrations tmp_10 > Gene_Integration_Full_Report.tsv
-#####    creating the truncated report
-####head -1 tmp_9-integrations > Gene_Integration_Truncated_Report.tsv
-####sed '1d' tmp_9-integrations | $perl -lane '$end=$F[1]+1;$math=$F[3]+$F[4];print"$F[0]\t$F[1]\t$end\t$F[2]\t$F[3]\t$F[4]\t$F[5]\t$F[6]\t$math";' > truc_1
-####$clusterbed -d 500 -i truc_1 | sort -k10n,10 -k9nr,9 -k8n,8 | uniq -f9 | cut -f1,2,4,5,6,7,8 >> Gene_Integration_Truncated_Report.tsv
-####echo "Virus_Description" > tmp_11
-####sed '1d' Gene_Integration_Truncated_Report.tsv | cut -f3 | while read i; do fgrep -w $i Viral_Presence_Report.tsv | head -1 | cut -f3-; done >> tmp_11
-####paste Gene_Integration_Truncated_Report.tsv tmp_11 > tmp_12
-####mv tmp_12 Gene_Integration_Truncated_Report.tsv
-####rm truc_1 tmp_*
-####echo "evaluated viral integration support genome wide and annotated nearby genes" >> software.log
-####date >> software.log
-
-##### create sample QC report
-####if [ "$INPUT_MODE" == "bam" ]; then
-####  treads=$(cat totalReads.count)
-####  rm totalReads.count
-####elif [ "$INPUT_MODE" == "fq" ]; then
-####  fq_lc=$(wc -l < $ARG_R1)
-####  treads=$(echo "${fq_lc}/2" | bc)
-####fi
-####vreads=$(cat viral_reads_se.ids | wc -l)
-####lcomplex=$(sort duster.remove | uniq | wc -l)
-####decoyc=$($bwa mem -Y -t 4 $Decoy viral_1.fq viral_2.fq | $perl -lane' print"$F[2]\t$F[0]";' | egrep '^chrUn' | cut -f2 | sort | uniq | wc -l)
-####decoy=$($perl -e '$math=('$decoyc'/'$vreads')*100;print"$math";'); 
-####hq=$(sed '1d' Viral_Reads_Report.tsv | cut -f1,2,8,9 | $perl -lane 'print"$F[1]\t$F[0]\n$F[3]\t$F[2]";' | egrep -v '^chr' | cut -f2 | sort | uniq | wc -l)
-####excludecount=$($samtools view Viral.sort.bam -L $ExcludeRegions | cut -f1 | sort | uniq | wc -l)
-####seqsim=$(echo "(${vreads}-(${lcomplex}+${hq}+${excludecount}))" | bc)
-####printf "TotalReads\tPaired_ViralReads\tViralDecoy_Percent\tLowComplexity_ViralReads\tExcludeRegion_ViralReads\tSeqSimilarity_ViralReads\tHighQuality_ViralReads\n" | tr '\t' '\n' > Sample_QC_Report-1
-####printf "$treads\t$vreads\t$decoy\t$lcomplex\t$excludecount\t$seqsim\t$hq\n" | tr '\t' '\n' > Sample_QC_Report-2
-####paste Sample_QC_Report-1 Sample_QC_Report-2 > Sample_QC_Report.tsv
-####rm Sample_QC_Report-*
-####echo "created a sample level QC report" >> software.log
-####date >> software.log
-
-# cleaning up temp files
+#
+# CLEAN UP TEMP FILES
+#
 mkdir -p temp_files
 mv viral* duster.* Viral* *_hits.ids temp_files/
 #mv temp_files/Viral_Presence_Report.tsv ./
