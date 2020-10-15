@@ -251,7 +251,12 @@ if [ "$DELETE_TEMP" == "false" ]; then
   #mv temp_files/Viral_Presence_Report.tsv ./
   mv temp_files/Viral_Reads_Report.tsv ./
 elif [ "$DELETE_TEMP" == "true" ]; then
-  echo hello
+  rm *.ids*
+  rm *.bam*
+  rm *.fq
+  rm *.count
+  rm duster.*
+  rm viral_reads_se.*
 fi
 echo "Done!" >> software.log
 date >> software.log
