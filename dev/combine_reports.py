@@ -190,6 +190,7 @@ parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min 
 parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
 parser.add_argument('-ml', type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
 parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
+parser.add_argument('-sn', type=str, required=False, metavar='<str>', help="sample name", default='')
 parser.add_argument('--report-exclude', required=False, action='store_true', default=False, help='output bed-excluded integration sites')
 args = parser.parse_args()
 
@@ -269,8 +270,9 @@ for line in f:
 		ACCESSION_TO_TAXONOMY[splt[0]] = splt[4]
 f.close()
 
-SAMTOOLS  = '/opt/conda/envs/samtools/bin/samtools'
-INPUT_BAM = args.b
+SAMTOOLS    = '/opt/conda/envs/samtools/bin/samtools'
+INPUT_BAM   = args.b
+SAMPLE_NAME = args.sn
 
 #
 #
@@ -951,6 +953,17 @@ f = open(OUT_DIR+'integrations.txt', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:
 	f.write('\t'.join(n)+'\n')
+f.close()
+
+#
+# WRITE OUTPUT BED
+#
+f = open(OUT_DIR+'integrations.bed', 'w')
+for n in out_report_data:
+	f.write(n[0] + '\t' + n[1] + '\t' + str(int(n[1])+1) + '\t')
+	if len(SAMPLE_NAME):
+		f.write(SAMPLE_NAME + ' ')
+	f.write(n[3] + '\n')
 f.close()
 
 #

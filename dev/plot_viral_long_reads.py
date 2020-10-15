@@ -222,7 +222,7 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 
 		seq_name  = ''
 		seq_name += k + DELIM_MAJOR												# read name
-		seq_name += DELIM_MINOR.join([abns_k[m][2] for m in n]) + DELIM_MAJOR	# viral refs this read spans
+		seq_name += DELIM_MINOR.join([abns_k[m][2]+':'+abns_k[m][5] for m in n]) + DELIM_MAJOR	# viral refs this read spans
 		#seq_name += DELIM_MINOR.join([str(m) for m in n]) + DELIM_MAJOR		# aln num of viral alignments (out of all alignments in the read)
 		seq_name += myAnchor										# anchored on left, right, or both?
 		if len(anchorseq_left):
