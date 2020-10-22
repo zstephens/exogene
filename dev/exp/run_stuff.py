@@ -63,7 +63,7 @@ for sampleName in sorted(fq_dict.keys()):
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
 	HEADER += '#$ -M zstephe2@illinois.edu\n'
 	HEADER += '#$ -m abe\n'
-	HEADER += '#$ -l h_vmem=64G ' + '\n'
+	HEADER += '#$ -l h_vmem=32G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
 
 	r1_clean = FQ_DIR + r1.split('/')[-1]
@@ -82,7 +82,7 @@ for sampleName in sorted(fq_dict.keys()):
 	#	CMD += PREP_SRA_FQ + ' ' + r2 + ' ' + r2_clean + ' 2 &' + '\n'
 	#	CMD += 'wait' + '\n'
 	
-	
+
 	haveData = False
 	if exists_and_is_nonZero(reads_report):
 			f = open(reads_report,'r')
@@ -103,9 +103,9 @@ for sampleName in sorted(fq_dict.keys()):
 		f = open(OUT_QSH+jobName+'.sh', 'w')
 		f.write(HEADER+'\n'+CMD+'\n')
 		f.close()
-		#os.system('qsub '+OUT_QSH+jobName+'.sh')
+		os.system('qsub '+OUT_QSH+jobName+'.sh')
 	nProcessed += 1
 
-	if nProcessed >= 10000:
-		break
+	#if nProcessed >= 10000:
+	#	break
 
