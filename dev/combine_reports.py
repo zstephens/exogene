@@ -964,6 +964,8 @@ f.close()
 #
 f = open(OUT_DIR+'integrations.bed', 'w')
 for n in out_report_data:
+	if n[1] == '-':	# only output events with softclip evidence to bed file
+		continue
 	f.write(n[0] + '\t' + n[1] + '\t' + str(int(n[1])+1) + '\t')
 	if len(SAMPLE_NAME):
 		f.write(SAMPLE_NAME + ' ')
