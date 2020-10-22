@@ -903,7 +903,11 @@ for i in order_to_process_clusters:
 		out_lrc = str(len(evidence_pb[i]))
 		#
 		out_nge = '-'
-		nearest_hit = get_nearest_transcript(out_chr, int(out_pos), TRANSCRIPT_TRACK)
+		if out_pos == '-':	# disc only
+			backup_pos  = np.mean([np.mean([n[0],n[1]]) for n in pe_to_report])
+			nearest_hit = get_nearest_transcript(out_chr, backup_pos, TRANSCRIPT_TRACK)
+		else:
+			nearest_hit = get_nearest_transcript(out_chr, int(out_pos), TRANSCRIPT_TRACK)
 		if nearest_hit != None:
 			out_nge = nearest_hit[1][1] + ' (' + nearest_hit[1][0] + ')'
 		#

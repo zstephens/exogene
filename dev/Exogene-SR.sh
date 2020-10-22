@@ -196,7 +196,7 @@ if [ "$INPUT_MODE" == "bam" ]; then
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   if [ ! -f viral_1.fq ] || [ ! -f viral_2.fq ]; then
-    $readlist_to_fq viral_reads_se.keep $ARG_R1 $ARG_R2 viral_1.fq viral_2.fq
+    $readlist_to_fq viral_reads_se.keep $ARG_R1 $ARG_R2 viral_1.fq viral_2.fq totalReads.count
   fi
 fi
 date >> software.log

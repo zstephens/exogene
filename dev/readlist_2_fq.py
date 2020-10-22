@@ -1,13 +1,14 @@
 import sys
 import gzip
 
-# python readlist_2_fq.py readlist r1.fq r2.fq out_r1.fq out_r2.fq
+# python readlist_2_fq.py readlist r1.fq r2.fq out_r1.fq out_r2.fq outReadCount
 
-RLIST  = sys.argv[1]
-IN_R1  = sys.argv[2]
-IN_R2  = sys.argv[3]
-OUT_R1 = sys.argv[4]
-OUT_R2 = sys.argv[5]
+RLIST   = sys.argv[1]
+IN_R1   = sys.argv[2]
+IN_R2   = sys.argv[3]
+OUT_R1  = sys.argv[4]
+OUT_R2  = sys.argv[5]
+OUT_CNT = sys.argv[6]
 
 def get_file_handle(fn, rw='r'):
 	if fn[-6:].lower() == '.fq.gz' or fn[-9:].lower() == '.fastq.gz':
@@ -59,6 +60,7 @@ fi_1.close()
 
 fo_1 = get_file_handle(OUT_R1, 'w')
 fo_2 = get_file_handle(OUT_R2, 'w')
+nWritten = 0
 for k in sorted(rDict.keys()):
 	if rDict[k][0] == '' or rDict[k][1] == '' or rDict[k][2] == '' or rDict[k][3] == '':
 		continue
@@ -70,6 +72,10 @@ for k in sorted(rDict.keys()):
 	fo_2.write(rDict[k][2] + '\n')
 	fo_2.write('+\n')
 	fo_2.write(rDict[k][3] + '\n')
+	nWritten += 1
 fo_2.close()
 fo_1.close()
 
+fo_0 = open(OUT_CNT, 'w')
+fo_0.write(str(nWritten))
+fo_0.close()
