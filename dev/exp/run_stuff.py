@@ -4,15 +4,15 @@ WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s20
 SRA_FQ_DIR  = '/research/bsi/data/controlled_access/dbGAP/PRJNA298941/fastqs/'
 
 FQ_DIR  = WORKING_DIR + 'fq/'
-OUT_DIR = WORKING_DIR + 'out/'
-GIT_DIR = WORKING_DIR + 'git/exogene/dev/'
+OUT_DIR = WORKING_DIR + 'out_redo/'
+GIT_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/'
 
 OUT_QSH  = WORKING_DIR + 'qsh/'
 OUT_QLOG = WORKING_DIR + 'qlog/'
 EMAIL    = 'stephens.zachary@mayo.edu'
 
 QUEUES  = ['1-hour', '1-day', '4-day', '7-day', '30-day']
-myQueue = '1-day'
+myQueue = '4-day'
 
 REPROCESS = ['SRR3104790',
              'SRR3105065',
@@ -23,7 +23,7 @@ REPROCESS = ['SRR3104790',
              'SRR3104908',
              'SRR3104834']
 
-PYTHON      = '/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7'
+PYTHON      = '/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python'
 PREP_SRA_FQ = PYTHON + ' ' + GIT_DIR + 'prep_sra_fq.py'
 EXOGENE_SR  = GIT_DIR + 'Exogene-SR-mforge.sh'
 COMBINE_REP = PYTHON + ' ' + GIT_DIR + 'combine_reports.py'
@@ -50,7 +50,7 @@ for sampleName in sorted(fq_dict.keys()):
 	r2 = fq_dict[sampleName][1]
 	if r1 == None or r2 == None:
 		continue
-	jobName = 'exogene_' + sampleName
+	jobName = 'exo_' + sampleName
 
 	#if sampleName not in REPROCESS:
 	#	continue
@@ -61,9 +61,9 @@ for sampleName in sorted(fq_dict.keys()):
 	HEADER += '#$ -q ' + myQueue + '\n'
 	HEADER += '#$ -o ' + OUT_QLOG + jobName + '.o' + '\n'
 	HEADER += '#$ -e ' + OUT_QLOG + jobName + '.e' + '\n'
-	#HEADER += '#$ -m ae' + '\n'
-	#HEADER += '#$ -M ' + EMAIL + '\n'
-	HEADER += '#$ -l h_vmem=32G ' + '\n'
+	HEADER += '#$ -M zstephe2@illinois.edu\n'
+	HEADER += '#$ -m abe\n'
+	HEADER += '#$ -l h_vmem=64G ' + '\n'
 	HEADER += '#$ -notify ' + '\n'
 
 	r1_clean = FQ_DIR + r1.split('/')[-1]
@@ -77,11 +77,12 @@ for sampleName in sorted(fq_dict.keys()):
 	runCMD = False
 	
 	CMD  = ''
-	if exists_and_is_nonZero(r1_clean) == False or exists_and_is_nonZero(r2_clean) == False:
-		CMD += PREP_SRA_FQ + ' ' + r1 + ' ' + r1_clean + ' 1 &' + '\n'
-		CMD += PREP_SRA_FQ + ' ' + r2 + ' ' + r2_clean + ' 2 &' + '\n'
-		CMD += 'wait' + '\n'
-	#
+	#if exists_and_is_nonZero(r1_clean) == False or exists_and_is_nonZero(r2_clean) == False:
+	#	CMD += PREP_SRA_FQ + ' ' + r1 + ' ' + r1_clean + ' 1 &' + '\n'
+	#	CMD += PREP_SRA_FQ + ' ' + r2 + ' ' + r2_clean + ' 2 &' + '\n'
+	#	CMD += 'wait' + '\n'
+	
+	
 	haveData = False
 	if exists_and_is_nonZero(reads_report):
 			f = open(reads_report,'r')
@@ -92,16 +93,17 @@ for sampleName in sorted(fq_dict.keys()):
 				haveData = True
 	if haveData == False:
 		CMD += EXOGENE_SR + ' -f1 ' + r1_clean + ' -f2 ' + r2_clean + ' -r ' + REF_HVR38 + ' -o ' + exo_out + '\n'
-	#
+	
+
 	if True or exists_and_is_nonZero(report_out) == False:
-		CMD += COMBINE_REP + ' -ms 20 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
+		CMD += COMBINE_REP + ' -ms 0 -md 10 -s ' + reads_report + ' -o ' + plots_out + ' -c ' + sampleName + ' > ' + report_out + '\n'
 		runCMD = True
 
 	if runCMD:
 		f = open(OUT_QSH+jobName+'.sh', 'w')
 		f.write(HEADER+'\n'+CMD+'\n')
 		f.close()
-		os.system('qsub '+OUT_QSH+jobName+'.sh')
+		#os.system('qsub '+OUT_QSH+jobName+'.sh')
 	nProcessed += 1
 
 	if nProcessed >= 10000:

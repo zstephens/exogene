@@ -77,12 +77,12 @@ mergeBed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/mergeBed
 sortBed=/research/bsi/tools/biotools/bedtools/bedtools/2.26.0/bin/sortBed
 
 # scripts
-duster_filt="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/duster_filter.py"
-readlist_to_fq="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/readlist_2_fq.py"
-readlist_to_fq_bam="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/readlist_2_fq_from_bam.py"
-aln_match_filter="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/aln_match_filter.py"
-viralreads_to_report="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/createViralReadsReport.py"
-combine_reports="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/git/exogene/dev/combine_reports.py"
+duster_filt="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/duster_filter.py"
+readlist_to_fq="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/readlist_2_fq.py"
+readlist_to_fq_bam="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/readlist_2_fq_from_bam.py"
+aln_match_filter="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/aln_match_filter.py"
+viralreads_to_report="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/createViralReadsReport.py"
+combine_reports="/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/python /research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_latest/exogene/dev/combine_reports.py"
 
 # refs
 HVR=/research/bsi/projects/staff_analysis/m112876/Viral_Workflow/references/HumanViral_Reference_12-12-2018.fa
@@ -236,10 +236,10 @@ $samtools view ${name}_viral.bam | fgrep -f VReads_1.3 > VReads_1
 $viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
 rm VReads_*
 # run combine_reports.py with some lenient thresholds to spit out all integrations
-$combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5
-echo ""
-cat results/integrations.txt
-echo ""
+####$combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5
+####echo ""
+####cat results/integrations.txt
+####echo ""
 date >> software.log
 
 #
