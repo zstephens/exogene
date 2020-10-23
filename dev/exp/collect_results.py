@@ -8,7 +8,7 @@ def exists_and_is_nonZero(fn):
 
 WORKING_DIR = '/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/exogene_sra/'
 
-OUT_DIR = WORKING_DIR + 'out/'
+OUT_DIR = WORKING_DIR + 'out_redo/'
 
 dat_out = {}
 
@@ -37,7 +37,7 @@ for lDir in listing:
 	else:
 		print 'Warning:', lDir, 'does not have Integration_Summary.txt'
 
-collected_results = WORKING_DIR + 'collected_results.txt'
+collected_results = WORKING_DIR + 'collected_results_redo.txt'
 f = open(collected_results,'w')
 for k in sorted(dat_out.keys()):
 	f.write(dat_out[k])
