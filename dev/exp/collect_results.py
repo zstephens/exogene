@@ -12,23 +12,26 @@ OUT_DIR = WORKING_DIR + 'out_redo/'
 
 dat_out = {}
 
-listing = [n for n in os.listdir(OUT_DIR) if n[:8] == 'exogene_']
+PREFIX = 'exo_'
+PLEN   = len(PREFIX)
+
+listing = [n for n in os.listdir(OUT_DIR) if n[:PLEN] == PREFIX]
 for lDir in listing:
 	listing2  = [n for n in os.listdir(OUT_DIR+lDir) if n == 'Integration_Summary.txt']
 	if len(listing2):
 		mySummary = OUT_DIR+lDir+'/'+listing2[0]
 		#print mySummary, exists_and_is_nonZero(mySummary)
 		if exists_and_is_nonZero(mySummary):
-			if lDir[8:] not in dat_out:
-				dat_out[lDir[8:]] = ''
+			if lDir[PLEN:] not in dat_out:
+				dat_out[lDir[PLEN:]] = ''
 			startReading = False
 			f = open(mySummary,'r')
 			for line in f:
 				if '### START_COMPARE ###' in line:
 					startReading = True
-					line = line.strip()+'\t'+lDir[8:]+'\n'
+					line = line.strip()+'\t'+lDir[PLEN:]+'\n'
 				if startReading:
-					dat_out[lDir[8:]] += line
+					dat_out[lDir[PLEN:]] += line
 			f.close()
 			if startReading == False:
 				print 'Warning:', lDir, 'has incomplete Integration_Summary.txt'
