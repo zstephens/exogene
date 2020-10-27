@@ -45,9 +45,12 @@ for line in input_stream:
 	if len(line) and line[0] != '#':
 		splt  = line.strip().split('\t')
 		rnm   = splt[0]
+		flag  = int(splt[1])
+
+		if rnm[-2:] == '/1' or rnm[-2:] == '/2':
+			rnm = rnm[:-2]
 		if rnm not in rDict:
 			continue
-		flag  = int(splt[1])
 
 		if flag&2048:	# skip supplementary alignments
 			continue
