@@ -10,7 +10,7 @@ ARG_R1=""
 ARG_R2=""
 ARG_REF=""
 ARG_OUT=""
-DELETE_TEMP="true"
+DELETE_TEMP="false"
 # bwa seed size
 ARG_BWA_SEED=30
 # toss out reads where >70% is flagged by duster as low complexity

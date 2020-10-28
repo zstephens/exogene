@@ -47,8 +47,19 @@ for line in input_stream:
 		rnm   = splt[0]
 		flag  = int(splt[1])
 
-		if rnm[-2:] == '/1' or rnm[-2:] == '/2':
+		# if readname ends in '/1' or '/2', let this take precedence over sam flags,
+		# which may be absent if both reads in the pair are unmapped.
+		first_in_pair_suffix  = False
+		second_in_pair_suffix = False
+		read_is_paired_suffix = False
+		if rnm[-2:] == '/1':
+			first_in_pair_suffix = True
+		elif rnm[-2:] == '/2':
+			second_in_pair_suffix = True
+		if first_in_pair_suffix or second_in_pair_suffix:
 			rnm = rnm[:-2]
+			read_is_paired_suffix = True
+
 		if rnm not in rDict:
 			continue
 
@@ -62,10 +73,10 @@ for line in input_stream:
 			rdat = splt[9]
 			qdat = splt[10]
 
-		if flag&1:
-			if flag&64:
+		if flag&1 or read_is_paired_suffix:
+			if flag&64 or first_in_pair_suffix:
 				rDict[rnm][0] = [rdat, qdat]
-			elif flag&128:
+			elif flag&128 or second_in_pair_suffix:
 				rDict[rnm][1] = [rdat, qdat]
 
 		if len(rDict[rnm][0]) and len(rDict[rnm][1]):
