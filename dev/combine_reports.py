@@ -24,13 +24,13 @@ sys.path.append(SIM_PATH)
 from mappability_corgi import MappabilityTrack
 from sra_comparison import COMPARE
 
-HUMAN_CHR  = [str(n) for n in range(1,22+1)] + ['X', 'Y']
+HUMAN_CHR  = [str(n) for n in range(1,22+1)] + ['X', 'Y', 'M']
 HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
 HUMAN_CHR  = {n:True for n in HUMAN_CHR}
 
 LEXICO_2_IND = {'chr1':1, 'chr2':2, 'chr3':3, 'chr10':10, 'chr11':11, 'chr12':12, 'chr19':19, 'chr20':20,
                 'chr4':4, 'chr5':5, 'chr6':6, 'chr13':13, 'chr14':14, 'chr15':15, 'chr21':21, 'chr22':22,
-                'chr7':7, 'chr8':8, 'chr9':9, 'chr16':16, 'chr17':17, 'chr18':18, 'chrX' :23, 'chrY' :24}
+                'chr7':7, 'chr8':8, 'chr9':9, 'chr16':16, 'chr17':17, 'chr18':18, 'chrX' :23, 'chrY' :24, 'chrM':25}
 
 TELOMERE_HG38 = [('chr1',0,10000), ('chr1',248946422,248956422), ('chr2',0,10000), ('chr2',242183529,242193529), ('chr3',0,10000), ('chr3',198285559,198295559), ('chr4',0,10000), ('chr4',190204555,190214555), ('chr5',0,10000), ('chr5',181528259,181538259), ('chr6',0,10000), ('chr6',170795979,170805979), ('chr7',0,10000), ('chr7',159335973,159345973), ('chr8',0,10000), ('chr8',145128636,145138636), ('chr9',0,10000), ('chr9',138384717,138394717), ('chrX',0,10000), ('chrX',156030895,156040895), ('chrY',0,10000), ('chrY',57217415,57227415), ('chr10',0,10000), ('chr10',133787422,133797422), ('chr11',0,10000), ('chr11',135076622,135086622), ('chr12',0,10000), ('chr12',133265309,133275309), ('chr13',0,10000), ('chr13',114354328,114364328), ('chr14',0,10000), ('chr14',107033718,107043718), ('chr15',0,10000), ('chr15',101981189,101991189), ('chr16',0,10000), ('chr16',90328345,90338345), ('chr17',0,10000), ('chr17',83247441,83257441), ('chr18',0,10000), ('chr18',80363285,80373285), ('chr19',0,10000), ('chr19',58607616,58617616), ('chr20',0,10000), ('chr20',64434167,64444167), ('chr21',0,10000), ('chr21',46699983,46709983), ('chr22',0,10000), ('chr22',50808468,50818468)]
 TELOMERE_BUFF = 50000
@@ -192,6 +192,7 @@ parser.add_argument('-ml', type=int, required=False, metavar='<int>', help="min 
 parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
 parser.add_argument('-sn', type=str, required=False, metavar='<str>', help="sample name", default='')
 parser.add_argument('--report-exclude', required=False, action='store_true', default=False, help='output bed-excluded integration sites')
+parser.add_argument('--no-plot',        required=False, action='store_true', default=False, help='skip plotting')
 args = parser.parse_args()
 
 # basic parameters
@@ -288,6 +289,7 @@ MIN_SOFTCLIP_MULT  = 2			# must have at least this many unanchored softclips at 
 MIN_LONG_PER_EVENT = args.ml
 
 REPORT_ALL_BEDHITS = args.report_exclude
+SKIP_PLOTTING      = args.no_plot
 
 if MIN_SOFTCLIP < 0:
 	print('Error: -ms must be > 0')
@@ -306,6 +308,7 @@ clustered_events = []
 evidence_sc      = []	# softclip
 evidence_pe      = []	# discordant paired-end reads
 evidence_pb      = []	# pacbio
+viral_presence   = {}
 
 #
 #	PARSE SHORT READS REPORT
@@ -379,8 +382,29 @@ if len(IN_SHORT):
 	for k in data_byReadName.keys():
 		# only read pairs where both passed filters...
 		if len(data_byReadName[k]) == 2:
+			# human - human
+			if sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 2:
+				pass
+			# virus - virus
+			elif sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 0:
+				vref1 = data_byReadName[k][0][0]
+				vref2 = data_byReadName[k][1][0]
+				if vref1 in ID_TO_ACCESSION:
+					vref1 = ID_TO_ACCESSION[vref1]
+				if vref1 in ACCESSION_TO_TAXONOMY:
+					vref1 = ACCESSION_TO_TAXONOMY[vref1]
+				if vref2 in ID_TO_ACCESSION:
+					vref2 = ID_TO_ACCESSION[vref2]
+				if vref2 in ACCESSION_TO_TAXONOMY:
+					vref2 = ACCESSION_TO_TAXONOMY[vref2]
+				if vref1 not in viral_presence:
+					viral_presence[vref1] = 0
+				if vref2 not in viral_presence:
+					viral_presence[vref2] = 0
+				viral_presence[vref1] += 1
+				viral_presence[vref2] += 1
 			# human - virus only
-			if sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 1:
+			elif sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 1:
 
 				# sort pairs such that read 1 is mapped to human
 				if data_byReadName[k][0][0] in HUMAN_CHR:
@@ -393,7 +417,10 @@ if len(IN_SHORT):
 					r2[0] = ID_TO_ACCESSION[r2[0]]
 				if r2[0] in ACCESSION_TO_TAXONOMY:
 					r2[0] = ACCESSION_TO_TAXONOMY[r2[0]]
-				#print('--',[r1,r2])
+				# tabulate
+				if r2[0] not in viral_presence:
+					viral_presence[r2[0]] = 0
+				viral_presence[r2[0]] += 1
 
 				# speed things up, only extract reads pertaining to virus-of-interest
 				if len(VOI) and r2[0] != VOI:
@@ -468,6 +495,10 @@ if len(IN_LONG):
 			viral_ref = ID_TO_ACCESSION[viral_ref]
 		if viral_ref in ACCESSION_TO_TAXONOMY:
 			viral_ref = ACCESSION_TO_TAXONOMY[viral_ref]
+		# tabulate
+		if viral_ref not in viral_presence:
+			viral_presence[viral_ref] = 0
+		viral_presence[viral_ref] += 1
 	
 		if int(qc1[1]) < MIN_LONG_READ_MAPQ and int(qc2[1]) < MIN_LONG_READ_MAPQ:
 			continue
@@ -754,71 +785,77 @@ for i in order_to_process_clusters:
 	#
 	#	PLOTTING
 	#
-	PWIDTH = 0.3
-	PWIDTH_SC = 0.4
-	poly_pe = []
-	poly_pe_stratified = [[] for n in pe_to_report_stratified]
-	poly_sc = []
-	poly_pb1 = []
-	poly_pb2 = []
-	if max_pe:
-		for n in pe_to_report:
-			poly_pe.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
+	if SKIP_PLOTTING == False:
+		PWIDTH = 0.3
+		PWIDTH_SC = 0.4
+		poly_pe = []
+		poly_pe_stratified = [[] for n in pe_to_report_stratified]
+		poly_sc = []
+		poly_pb1 = []
+		poly_pb2 = []
+		if max_pe:
+			for n in pe_to_report:
+				poly_pe.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
+			for j in xrange(len(poly_pe_stratified)):
+				for n in pe_to_report_stratified[j]:
+					poly_pe_stratified[j].append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
+		if max_sc:
+			for n in sc_to_report:
+				poly_sc.append(Polygon(np.array([[n[0]-0.5,-PWIDTH_SC+2], [n[0]-0.5,PWIDTH_SC+2], [n[1]+0.5,PWIDTH_SC+2], [n[1]+0.5,-PWIDTH_SC+2]]), closed=True, linewidth=2))
+		if len(evidence_pb[i]):
+			for n in evidence_pb[i]:
+				if n[1] == 'CCS':
+					poly_pb1.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+1], [n[0]-0.5,PWIDTH+1], [n[0]+0.5,PWIDTH+1], [n[0]+0.5,-PWIDTH+1]]), closed=True, linewidth=2))
+				else:
+					poly_pb2.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+1], [n[0]-0.5,PWIDTH+1], [n[0]+0.5,PWIDTH+1], [n[0]+0.5,-PWIDTH+1]]), closed=True, linewidth=2))
+
+		mpl.rcParams.update({'font.size': 16, 'font.weight':'bold'})
+
+		fig = mpl.figure(0,figsize=(12,6))
+		ax = mpl.gca()
+		#ax.add_collection(PatchCollection(poly_pe, alpha=0.6, color='tab:blue', linewidth=0))
 		for j in xrange(len(poly_pe_stratified)):
-			for n in pe_to_report_stratified[j]:
-				poly_pe_stratified[j].append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
-	if max_sc:
-		for n in sc_to_report:
-			poly_sc.append(Polygon(np.array([[n[0]-0.5,-PWIDTH_SC+2], [n[0]-0.5,PWIDTH_SC+2], [n[1]+0.5,PWIDTH_SC+2], [n[1]+0.5,-PWIDTH_SC+2]]), closed=True, linewidth=2))
-	if len(evidence_pb[i]):
-		for n in evidence_pb[i]:
-			if n[1] == 'CCS':
-				poly_pb1.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+1], [n[0]-0.5,PWIDTH+1], [n[0]+0.5,PWIDTH+1], [n[0]+0.5,-PWIDTH+1]]), closed=True, linewidth=2))
-			else:
-				poly_pb2.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+1], [n[0]-0.5,PWIDTH+1], [n[0]+0.5,PWIDTH+1], [n[0]+0.5,-PWIDTH+1]]), closed=True, linewidth=2))
-
-	mpl.rcParams.update({'font.size': 16, 'font.weight':'bold'})
-
-	fig = mpl.figure(0,figsize=(12,6))
-	ax = mpl.gca()
-	#ax.add_collection(PatchCollection(poly_pe, alpha=0.6, color='tab:blue', linewidth=0))
-	for j in xrange(len(poly_pe_stratified)):
-		ax.add_collection(PatchCollection(poly_pe_stratified[j], alpha=POLY_PE_ALPHA[j], color='blue', linewidth=0))
-	ax.add_collection(PatchCollection(poly_sc, alpha=0.6, color='black', linewidth=2))
-	ax.add_collection(PatchCollection(poly_pb2, alpha=0.6, color='purple', linewidth=2))
-	ax.add_collection(PatchCollection(poly_pb1, alpha=0.6, color='red', linewidth=2))
+			ax.add_collection(PatchCollection(poly_pe_stratified[j], alpha=POLY_PE_ALPHA[j], color='blue', linewidth=0))
+		ax.add_collection(PatchCollection(poly_sc, alpha=0.6, color='black', linewidth=2))
+		ax.add_collection(PatchCollection(poly_pb2, alpha=0.6, color='purple', linewidth=2))
+		ax.add_collection(PatchCollection(poly_pb1, alpha=0.6, color='red', linewidth=2))
 
 	allv  = []
 	legText = []
 	if max_pe:
 		allv += [n[0] for n in pe_to_report] + [n[1] for n in pe_to_report]
-		mpl.plot([-2,-1],[0,0],color='blue')
+		if SKIP_PLOTTING == False:
+			mpl.plot([-2,-1],[0,0],color='blue')
 		legText.append('Discordant pairs')
 	if max_sc:
 		allv += [n[0] for n in sc_to_report] + [n[1] for n in sc_to_report]
-		mpl.plot([-2,-1],[0,0],color='black')
+		if SKIP_PLOTTING == False:
+			mpl.plot([-2,-1],[0,0],color='black')
 		legText.append('Softclipped reads')
 	if len(evidence_pb[i]):
 		allv += [n[0] for n in evidence_pb[i]]
-		mpl.plot([-2,-1],[0,0],color='purple')
+		if SKIP_PLOTTING == False:
+			mpl.plot([-2,-1],[0,0],color='purple')
+			mpl.plot([-2,-1],[0,0],color='red')
 		legText.append('PacBio CLR')
-		mpl.plot([-2,-1],[0,0],color='red')
 		legText.append('PacBio CCS')
 
-	leg = mpl.legend(legText,loc=4)
-	for l in leg.legendHandles:            
-		l.set_linewidth(10)
+	if SKIP_PLOTTING == False:
+		leg = mpl.legend(legText,loc=4)
+		for l in leg.legendHandles:            
+			l.set_linewidth(10)
 
-	mpl.axis([min(allv)-PLOT_BUFF, max(allv)+PLOT_BUFF, -1, 3])
-	mpl.grid(linestyle='--', alpha=0.5)
-	mpl.yticks([0,1,2],['', 'Exogene-LR', 'Exogene-SR'])
-	mpl.xlabel('Reference coordinates')
-	mpl.title(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
-	mpl.tight_layout()
+		mpl.axis([min(allv)-PLOT_BUFF, max(allv)+PLOT_BUFF, -1, 3])
+		mpl.grid(linestyle='--', alpha=0.5)
+		mpl.yticks([0,1,2],['', 'Exogene-LR', 'Exogene-SR'])
+		mpl.xlabel('Reference coordinates')
+		mpl.title(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
+		mpl.tight_layout()
 
 	igv_pos = clustered_events[i][0][0] + ':' + str(min(allv)-PLOT_BUFF) + '-' + str(max(allv)+PLOT_BUFF)
 
-	myClass = (1*(len(poly_sc) > 0), 1*(len(poly_pe) > 0), 1*(len(poly_pb1) > 0), 1*(len(poly_pb2) > 0))
+	pbtypes = [n[1] for n in evidence_pb[i]]
+	myClass = (1*(len(sc_to_report) > 0), 1*(len(pe_to_report) > 0), 1*('CCS' in pbtypes), 1*('CLR' in pbtypes))
 	if myClass not in class_counts:
 		class_counts[myClass] = 0
 	class_counts[myClass] += 1
@@ -913,10 +950,11 @@ for i in order_to_process_clusters:
 		#
 		out_report_data.append((out_chr, out_pos, out_num, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc, out_nge))
 
+	if SKIP_PLOTTING == False:
 		#mpl.show()
 		mpl.savefig(OUT_DIR+'site_'+str(nPlot).zfill(zfill_num)+'_'+igv_pos.replace(':','_')+'.png')
 		nPlot += 1
-	mpl.close(fig)
+		mpl.close(fig)
 
 	BIG_VAL = 9999999
 	min_distance_between_sc_and_pb = BIG_VAL
@@ -970,6 +1008,17 @@ for n in out_report_data:
 	if len(SAMPLE_NAME):
 		f.write(SAMPLE_NAME + ' ')
 	f.write(n[3] + '\n')
+f.close()
+
+#
+# WRITE OUTPUT VIRAL PRESENCE
+#
+sk = sorted([[viral_presence[k],k] for k in viral_presence.keys()], reverse=True)
+f = open(OUT_DIR+'viral_presence.tsv', 'w')
+for n in sk:
+	if n[1] == '-':	# only output events with softclip evidence to bed file
+		continue
+	f.write(str(n[0]) + '\t' + n[1] + '\n')
 f.close()
 
 #
