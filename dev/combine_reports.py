@@ -1016,8 +1016,8 @@ f.close()
 sk = sorted([[viral_presence[k],k] for k in viral_presence.keys()], reverse=True)
 f = open(OUT_DIR+'viral_presence.tsv', 'w')
 for n in sk:
-	if n[1] == '-':	# only output events with softclip evidence to bed file
-		continue
+	if len(SAMPLE_NAME):
+		f.write(SAMPLE_NAME + '\t')
 	f.write(str(n[0]) + '\t' + n[1] + '\n')
 f.close()
 
