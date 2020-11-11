@@ -986,15 +986,20 @@ for i in order_to_process_clusters:
 #
 # WRITE OUTPUT REPORT
 #
-header = ('CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'ANNOTATION',
+header = ['CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'ANNOTATION',
           'SOFTCLIP_POS', '#SOFTCLIP',
           'DISCORDANT_POS', '#DISCORDANT',
           'LONGREAD_POS', '#LONGREAD',
-          'NEAREST_GENE')
+          'NEAREST_GENE']
+if len(SAMPLE_NAME):
+	header.append('SAMPLE_NAME')
 f = open(OUT_DIR+'integrations.txt', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:
-	f.write('\t'.join(n)+'\n')
+	if len(SAMPLE_NAME):
+		f.write('\t'.join(n+[SAMPLE_NAME])+'\n')
+	else:
+		f.write('\t'.join(n)+'\n')
 f.close()
 
 #
