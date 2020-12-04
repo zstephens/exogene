@@ -6,9 +6,9 @@ A workflow for detecting viral integrations from both short read and long read s
 ----
 ## usage
 
-`docker pull zstephens/exogene:v1a`
+`docker pull zstephens/exogene:v13`
 
-`docker run -it -v ${HOME}:${HOME} zstephens/exogene:v1a`
+`docker run -it -v ${HOME}:${HOME} zstephens/exogene:v13`
 
 ### Create human + viral reference sequence:
 
