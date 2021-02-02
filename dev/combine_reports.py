@@ -199,7 +199,7 @@ args = parser.parse_args()
 (IN_SHORT, IN_LONG, OUT_DIR) = (args.s, args.l, args.o)
 
 VOI = args.v
-#VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
+VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
 
 if IN_SHORT == '' and IN_LONG == '':
 	print('Must specify either -s or -l')
@@ -515,13 +515,13 @@ if len(IN_LONG):
 				found_a_hit = close_enough(myJunction, clustered_events[i][j])
 				if found_a_hit:
 					clustered_events[i].append([n for n in myJunction])
-					evidence_pb[i].append((int(bp1[1]), myType))
+					evidence_pb[i].append((int(bp1[1]), myType, int(qc1[1])))
 					break
 			if found_a_hit:
 				break
 		if not found_a_hit:
 			clustered_events.append([[n for n in myJunction]])
-			evidence_pb.append([(int(bp1[1]), myType)])
+			evidence_pb.append([(int(bp1[1]), myType, int(qc1[1]))])
 	f.close()
 
 # sort!
@@ -855,7 +855,7 @@ for i in order_to_process_clusters:
 	igv_pos = clustered_events[i][0][0] + ':' + str(min(allv)-PLOT_BUFF) + '-' + str(max(allv)+PLOT_BUFF)
 
 	pbtypes = [n[1] for n in evidence_pb[i]]
-	myClass = (1*(len(sc_to_report) > 0), 1*(len(pe_to_report) > 0), 1*('CCS' in pbtypes), 1*('CLR' in pbtypes))
+	myClass = (1*(sc_to_report != None and len(sc_to_report) > 0), 1*(pe_to_report != None and len(pe_to_report) > 0), 1*('CCS' in pbtypes), 1*('CLR' in pbtypes))
 	if myClass not in class_counts:
 		class_counts[myClass] = 0
 	class_counts[myClass] += 1
@@ -883,12 +883,23 @@ for i in order_to_process_clusters:
 	bed_chr = clustered_events[i][0][0]
 	bed_pos = avg_all
 
+	#
 	# annotate!
+	#
 	bed_out = []
 	for bed_i in xrange(len(BED_TRACKS)):
 		if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
 			#print('--',BED_TRACKS[bed_i][0])
 			bed_out.append(BED_TRACKS[bed_i][0])
+	pb_mq0_ccs = 0
+	pb_mq0_clr = 0
+	for n in evidence_pb[i]:
+		if n[1] == 'CCS' and n[2] <= 2:
+			pb_mq0_ccs += 1
+		if n[1] == 'CLR' and n[2] <= 2:
+			pb_mq0_clr += 1
+	if len(evidence_pb[i]) and float(pb_mq0_ccs + pb_mq0_clr)/len(evidence_pb[i]) >= 0.50:
+		bed_out.append('mapq0')
 
 	#
 	# PRINT BREAKPOINT SUMMARY
@@ -938,6 +949,14 @@ for i in order_to_process_clusters:
 			out_lrp = ccs_str.split(' ')[5]
 			out_pos = ccs_str.split(' ')[5]
 		out_lrc = str(len(evidence_pb[i]))
+		out_lrm = [0,0]
+		for n in evidence_pb[i]:
+			if n[1] == 'CCS':
+				out_lrm[0] += 1
+			elif n[1] == 'CLR':
+				out_lrm[1] += 1
+		out_lrm = str(out_lrm[0]) + '/' + str(out_lrm[1])
+		out_lr0 = str(pb_mq0_ccs) + '/' + str(pb_mq0_clr)
 		#
 		out_nge = '-'
 		if out_pos == '-':	# disc only
@@ -946,9 +965,10 @@ for i in order_to_process_clusters:
 		else:
 			nearest_hit = get_nearest_transcript(out_chr, int(out_pos), TRANSCRIPT_TRACK)
 		if nearest_hit != None:
-			out_nge = nearest_hit[1][1] + ' (' + nearest_hit[1][0] + ')'
+			out_nge  = nearest_hit[1][1]
+			#out_nge += ' (' + nearest_hit[1][0] + ')'
 		#
-		out_report_data.append((out_chr, out_pos, out_num, out_vir, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc, out_nge))
+		out_report_data.append([out_chr, out_pos, out_num, out_vir, out_nge, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc, out_lrm, out_lr0])
 
 	if SKIP_PLOTTING == False:
 		#mpl.show()
@@ -986,18 +1006,18 @@ for i in order_to_process_clusters:
 #
 # WRITE OUTPUT REPORT
 #
-header = ['CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'ANNOTATION',
-          'SOFTCLIP_POS', '#SOFTCLIP',
-          'DISCORDANT_POS', '#DISCORDANT',
-          'LONGREAD_POS', '#LONGREAD',
-          'NEAREST_GENE']
+header = []
 if len(SAMPLE_NAME):
 	header.append('SAMPLE_NAME')
+header += ['CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'NEAREST_GENE', 'ANNOTATION',
+           'SOFTCLIP_POS', '#SOFTCLIP',
+           'DISCORDANT_POS', '#DISCORDANT',
+           'LONGREAD_POS', '#LONGREAD', '#HIFI/CLR', '#MAPQ0_HIFI/CLR']
 f = open(OUT_DIR+'integrations.txt', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:
 	if len(SAMPLE_NAME):
-		f.write('\t'.join(n+[SAMPLE_NAME])+'\n')
+		f.write('\t'.join([SAMPLE_NAME]+n)+'\n')
 	else:
 		f.write('\t'.join(n)+'\n')
 f.close()
