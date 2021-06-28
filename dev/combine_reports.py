@@ -177,20 +177,21 @@ def rm(fn):
 
 
 parser = argparse.ArgumentParser(description='combine_reports.py')
-parser.add_argument('-o',  type=str, required=True,  metavar='<str>', help="* output_dir/")
-parser.add_argument('-s',  type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
-parser.add_argument('-l',  type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
-parser.add_argument('-v',  type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
-parser.add_argument('-v1', type=str, required=False, metavar='<str>', help="virusNames.json", default='')
-parser.add_argument('-v2', type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
-parser.add_argument('-c',  type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
-parser.add_argument('-a',  type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
-parser.add_argument('-b',  type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
-parser.add_argument('-ms', type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
-parser.add_argument('-md', type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
-parser.add_argument('-ml', type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
-parser.add_argument('-mq', type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
-parser.add_argument('-sn', type=str, required=False, metavar='<str>', help="sample name", default='')
+parser.add_argument('-o',   type=str, required=True,  metavar='<str>', help="* output_dir/")
+parser.add_argument('-s',   type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
+parser.add_argument('-l',   type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
+parser.add_argument('-v',   type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
+parser.add_argument('-v1',  type=str, required=False, metavar='<str>', help="virusNames.json", default='')
+parser.add_argument('-v2',  type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
+parser.add_argument('-c',   type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
+parser.add_argument('-a',   type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
+parser.add_argument('-b',   type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
+parser.add_argument('-ms',  type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
+parser.add_argument('-md',  type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
+parser.add_argument('-ml',  type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
+parser.add_argument('-mq',  type=int, required=False, metavar='<int>', help="discard long read alns below this mapq", default=3)
+parser.add_argument('-sn',  type=str, required=False, metavar='<str>', help="sample name", default='')
+parser.add_argument('-hgt', type=str, required=False, metavar='<str>', help="bed of HGT-ID results to compare against", default='')
 parser.add_argument('--report-exclude', required=False, action='store_true', default=False, help='output bed-excluded integration sites')
 parser.add_argument('--no-plot',        required=False, action='store_true', default=False, help='skip plotting')
 args = parser.parse_args()
@@ -275,10 +276,25 @@ SAMTOOLS    = '/opt/conda/envs/samtools/bin/samtools'
 INPUT_BAM   = args.b
 SAMPLE_NAME = args.sn
 
-#
-#
-#
+PWIDTH    = 0.3
+PWIDTH_SC = 0.4
+COLLAPSE_PACBIO = False
+PAPER_FIG       = False
 
+IN_HGT   = args.hgt
+HGT_BED  = {}
+if IN_HGT != '':
+	f = open(IN_HGT, 'r')
+	for line in f:
+		splt = line.strip().split('\t')
+		if splt[0] not in HGT_BED:
+			HGT_BED[splt[0]] = []
+		HGT_BED[splt[0]].append((int(splt[1]), int(splt[2])))
+	f.close()
+
+#
+#
+#
 MIN_LONG_READ_MAPQ = args.mq	# skip a junction if both ends are below this mapq
 PLOT_BUFF          = 100
 MAX_LONG_READ_GAP  = 1000		# skip human --> viral junctions that have more than this much unexplained read sequence between them
@@ -594,7 +610,7 @@ if len(INPUT_BAM) and exists_and_is_nonZero(INPUT_BAM) and len(IN_SHORT):
 
 zfill_num = len(str(len(clustered_events)))
 
-POLY_PE_ALPHA = [0.1, 0.2, 0.3, 0.5, 0.8]
+POLY_PE_ALPHA = [0.10, 0.20, 0.30, 0.45, 0.60]
 POLY_PE_STEPS = len(POLY_PE_ALPHA)
 POLY_PE_ALPHA = [0.0] + POLY_PE_ALPHA
 
@@ -786,16 +802,18 @@ for i in order_to_process_clusters:
 	#	PLOTTING
 	#
 	if SKIP_PLOTTING == False:
-		PWIDTH = 0.3
-		PWIDTH_SC = 0.4
 		poly_pe = []
 		poly_pe_stratified = [[] for n in pe_to_report_stratified]
 		poly_sc = []
 		poly_pb1 = []
 		poly_pb2 = []
+		poly_hgt = []
+
 		if max_pe:
 			for n in pe_to_report:
 				poly_pe.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
+			#if len(poly_pe_stratified):
+			#	j = len(poly_pe_stratified) - 1
 			for j in xrange(len(poly_pe_stratified)):
 				for n in pe_to_report_stratified[j]:
 					poly_pe_stratified[j].append(Polygon(np.array([[n[0]-0.5,-PWIDTH+2], [n[0]-0.5,PWIDTH+2], [n[1]+0.5,PWIDTH+2], [n[1]+0.5,-PWIDTH+2]]), closed=True, linewidth=0))
@@ -809,16 +827,28 @@ for i in order_to_process_clusters:
 				else:
 					poly_pb2.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+1], [n[0]-0.5,PWIDTH+1], [n[0]+0.5,PWIDTH+1], [n[0]+0.5,-PWIDTH+1]]), closed=True, linewidth=2))
 
-		mpl.rcParams.update({'font.size': 16, 'font.weight':'bold'})
+		hgt_ytick = ''
+		if len(HGT_BED) and clustered_events[i][0][0] in HGT_BED:
+			#print('HGT:', clustered_events[i][0][0], HGT_BED[clustered_events[i][0][0]])
+			for n in HGT_BED[clustered_events[i][0][0]]:
+				poly_hgt.append(Polygon(np.array([[n[0]-0.5,-PWIDTH+0], [n[0]-0.5,PWIDTH+0], [n[1]+0.5,PWIDTH+0], [n[1]+0.5,-PWIDTH+0]]), closed=True, linewidth=0))
+			hgt_ytick = 'HGT-ID'
+
+		mpl.rcParams.update({'font.size': 17, 'font.weight':'bold'})
 
 		fig = mpl.figure(0,figsize=(12,6))
 		ax = mpl.gca()
 		#ax.add_collection(PatchCollection(poly_pe, alpha=0.6, color='tab:blue', linewidth=0))
 		for j in xrange(len(poly_pe_stratified)):
 			ax.add_collection(PatchCollection(poly_pe_stratified[j], alpha=POLY_PE_ALPHA[j], color='blue', linewidth=0))
-		ax.add_collection(PatchCollection(poly_sc, alpha=0.6, color='black', linewidth=2))
-		ax.add_collection(PatchCollection(poly_pb2, alpha=0.6, color='purple', linewidth=2))
-		ax.add_collection(PatchCollection(poly_pb1, alpha=0.6, color='red', linewidth=2))
+		ax.add_collection(PatchCollection(poly_sc,  alpha=0.9, color='black',  linewidth=3))
+		ax.add_collection(PatchCollection(poly_hgt, alpha=0.6, color='blue',   linewidth=0))
+		if COLLAPSE_PACBIO:
+			ax.add_collection(PatchCollection(poly_pb2, alpha=0.9, color='black', linewidth=3))
+			ax.add_collection(PatchCollection(poly_pb1, alpha=0.9, color='black', linewidth=3))
+		else:
+			ax.add_collection(PatchCollection(poly_pb2, alpha=0.9, color='purple', linewidth=3))
+			ax.add_collection(PatchCollection(poly_pb1, alpha=0.9, color='red',    linewidth=3))
 
 	allv  = []
 	legText = []
@@ -834,22 +864,31 @@ for i in order_to_process_clusters:
 		legText.append('Softclipped reads')
 	if len(evidence_pb[i]):
 		allv += [n[0] for n in evidence_pb[i]]
-		if SKIP_PLOTTING == False:
-			mpl.plot([-2,-1],[0,0],color='purple')
-			mpl.plot([-2,-1],[0,0],color='red')
-		legText.append('PacBio CLR')
-		legText.append('PacBio CCS')
+		if COLLAPSE_PACBIO == False:
+			if SKIP_PLOTTING == False:
+				mpl.plot([-2,-1],[0,0],color='purple')
+				mpl.plot([-2,-1],[0,0],color='red')
+			legText.append('PacBio CLR')
+			legText.append('PacBio CCS')
 
 	if SKIP_PLOTTING == False:
-		leg = mpl.legend(legText,loc=4)
+		LEG_LOC = 4
+		#LEG_LOC = 3
+		leg = mpl.legend(legText,loc=LEG_LOC)
 		for l in leg.legendHandles:            
 			l.set_linewidth(10)
 
-		mpl.axis([min(allv)-PLOT_BUFF, max(allv)+PLOT_BUFF, -1, 3])
+		if PAPER_FIG and clustered_events[i][0][0] == 'chr7':
+			mpl.axis([72026500, 72028500, -1, 3])
+			mpl.xticks([72026500, 72027000, 72027500, 72028000, 72028500], ['72,026,500', '72,027,000', '72,027,500', '72,028,000', '72,028,500'])
+		else:
+			(xlim1, xlim2) = (min(allv)-PLOT_BUFF, max(allv)+PLOT_BUFF)
+			mpl.axis([xlim1, xlim2, -1, 3])
+			mpl.title(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
+		
 		mpl.grid(linestyle='--', alpha=0.5)
-		mpl.yticks([0,1,2],['', 'Exogene-LR', 'Exogene-SR'])
-		mpl.xlabel('Reference coordinates')
-		mpl.title(clustered_events[i][0][0] + ' --> ' + clustered_events[i][0][1])
+		mpl.yticks([0,1,2],[hgt_ytick, 'Exogene-LR', 'Exogene-SR'])
+		mpl.xlabel('Reference coordinates (' + clustered_events[i][0][0] + ')')
 		mpl.tight_layout()
 
 	igv_pos = clustered_events[i][0][0] + ':' + str(min(allv)-PLOT_BUFF) + '-' + str(max(allv)+PLOT_BUFF)
