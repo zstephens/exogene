@@ -141,7 +141,7 @@ fi
 # identify viral junctions
 if [ ! -f Viral_Junctions_LongReads.tsv ]; then
   mkdir -p longread_plots
-  $gen_report -s pbmm2_viralReads.sam -o Viral_Junctions_LongReads.tsv -p longread_plots/
+  $gen_report -s pbmm2_viralReads.sam -o Viral_Junctions_LongReads.tsv -p longread_plots/ -t t2t_v1.1_genes.bed.gz
 fi
 
 # SV calling
