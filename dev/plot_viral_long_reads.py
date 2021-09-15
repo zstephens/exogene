@@ -77,9 +77,10 @@ def get_nearest_transcript(myChr, pos, bedDat, max_dist=20000):
 //////////////////////////////////////////////////"""
 
 parser = argparse.ArgumentParser(description='plot_viral_long_reads.py')
-parser.add_argument('-s', type=str, required=True, metavar='<str>', help="* input.sam")
-parser.add_argument('-o', type=str, required=True, metavar='<str>', help="* output_report.tsv")
-parser.add_argument('-p', type=str, required=True, metavar='<str>', help="* output_pics/")
+parser.add_argument('-s', type=str, required=True,  metavar='<str>', help="* input.sam")
+parser.add_argument('-o', type=str, required=True,  metavar='<str>', help="* output_report.tsv")
+parser.add_argument('-p', type=str, required=True,  metavar='<str>', help="* output_pics/")
+parser.add_argument('-t', type=str, required=False, metavar='<str>', help="transcripts.bed", default='transcripts_hg38.bed.gz')
 args = parser.parse_args()
 
 OUT_REPORT = args.o
@@ -92,7 +93,12 @@ makedir(OUT_DIR)
 SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-1]) + '/'
 BED_DIR = SIM_PATH + 'resources/'
 TRANSCRIPT_TRACK = {}
-f = gzip.open(BED_DIR + 'transcripts_hg38.bed.gz', 'r')
+#
+IN_TRANSCRIPTS_BED = args.t
+if IN_TRANSCRIPTS_BED[-3:] == '.gz':
+	f = gzip.open(BED_DIR + IN_TRANSCRIPTS_BED, 'r')
+else:
+	f = open(BED_DIR + IN_TRANSCRIPTS_BED, 'r')
 for line in f:
 	splt = line.strip().split('\t')
 	if splt[0] not in TRANSCRIPT_TRACK:
