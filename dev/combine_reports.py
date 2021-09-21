@@ -59,7 +59,9 @@ def get_compare(c,p):
 			outList.append(n)
 	return outList
 
-def isInBadRange(c,p):
+def isInBadRange(c, p, skip=False):
+	if skip:
+		return False
 	for n in TELOMERE_HG38:
 		if n[0] == c and p > n[1]-TELOMERE_BUFF and p < n[2]+TELOMERE_BUFF:
 			return True
@@ -186,6 +188,7 @@ parser.add_argument('-v2',  type=str, required=False, metavar='<str>', help="vir
 parser.add_argument('-c',   type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
 parser.add_argument('-a',   type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
 parser.add_argument('-b',   type=str, required=False, metavar='<str>', help="original_input.bam (for proximal softclip)", default='')
+parser.add_argument('-t',   type=str, required=False, metavar='<str>', help="transcripts.bed", default='transcripts_hg38.bed.gz')
 parser.add_argument('-ms',  type=int, required=False, metavar='<int>', help="min number of SC reads per event", default=2)
 parser.add_argument('-md',  type=int, required=False, metavar='<int>', help="min number of disc pairs per event (if no sc)", default=5)
 parser.add_argument('-ml',  type=int, required=False, metavar='<int>', help="min number of long reads per event", default=0)
@@ -194,6 +197,7 @@ parser.add_argument('-sn',  type=str, required=False, metavar='<str>', help="sam
 parser.add_argument('-hgt', type=str, required=False, metavar='<str>', help="bed of HGT-ID results to compare against", default='')
 parser.add_argument('--report-exclude', required=False, action='store_true', default=False, help='output bed-excluded integration sites')
 parser.add_argument('--no-plot',        required=False, action='store_true', default=False, help='skip plotting')
+parser.add_argument('--no-hg38-filt',   required=False, action='store_true', default=False, help='skip hg38 centromere+telomere filters')
 args = parser.parse_args()
 
 # basic parameters
@@ -236,7 +240,7 @@ BED_TRACKS = [['centromere',  MappabilityTrack(BED_DIR + 'hg38_centromere.bed', 
 
 # track for finding nearest-gene
 TRANSCRIPT_TRACK = {}
-f = gzip.open(BED_DIR + 'transcripts_hg38.bed.gz', 'r')
+f = gzip.open(BED_DIR + args.t, 'r')
 for line in f:
 	splt = line.strip().split('\t')
 	if splt[0] not in TRANSCRIPT_TRACK:
@@ -306,6 +310,7 @@ MIN_LONG_PER_EVENT = args.ml
 
 REPORT_ALL_BEDHITS = args.report_exclude
 SKIP_PLOTTING      = args.no_plot
+SKIP_HG38_FILT     = args.no_hg38_filt
 
 if MIN_SOFTCLIP < 0:
 	print('Error: -ms must be > 0')
@@ -926,10 +931,11 @@ for i in order_to_process_clusters:
 	# annotate!
 	#
 	bed_out = []
-	for bed_i in xrange(len(BED_TRACKS)):
-		if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
-			#print('--',BED_TRACKS[bed_i][0])
-			bed_out.append(BED_TRACKS[bed_i][0])
+	if SKIP_HG38_FILT == False:
+		for bed_i in xrange(len(BED_TRACKS)):
+			if BED_TRACKS[bed_i][1].query(bed_chr, bed_pos):
+				#print('--',BED_TRACKS[bed_i][0])
+				bed_out.append(BED_TRACKS[bed_i][0])
 	pb_mq0_ccs = 0
 	pb_mq0_clr = 0
 	for n in evidence_pb[i]:

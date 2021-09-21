@@ -117,14 +117,16 @@ pbsv=/opt/conda/envs/pbmm2/bin/pbsv
 duster=/usr/bin/dustmasker
 
 # scripts
-grep_virus="python /home/exogene/dev/grep_virus_from_sam.py"
-gen_report="python /home/exogene/dev/plot_viral_long_reads.py"
-vcf_to_fa="python /home/exogene/dev/vcf_2_insfa.py"
-duster_filt="python /home/exogene/dev/duster_filter.py"
-viral_ins="python /home/exogene/dev/append_viral_ins.py"
+python_path=python
+exogene_path=/home/exogene/dev
+grep_virus="$python_path $exogene_path/grep_virus_from_sam.py"
+gen_report="$python_path $exogene_path/plot_viral_long_reads.py"
+vcf_to_fa="$python_path $exogene_path/vcf_2_insfa.py"
+duster_filt="$python_path $exogene_path/duster_filter.py"
+viral_ins="$python_path $exogene_path/append_viral_ins.py"
 
 # resources
-viral_db_json=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018_simpleNames.json
+viral_db_json="$exogene_path/resources/HumanViral_Reference_12-12-2018_simpleNames.json"
 
 mkdir -p $ARG_OUT
 cd $ARG_OUT
