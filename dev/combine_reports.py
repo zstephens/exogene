@@ -204,7 +204,7 @@ args = parser.parse_args()
 (IN_SHORT, IN_LONG, OUT_DIR) = (args.s, args.l, args.o)
 
 VOI = args.v
-VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
+#VOI = 'Hepatitis B virus'  ### FOR TESTING ONLY, REMOVE ME LATER
 
 if IN_SHORT == '' and IN_LONG == '':
 	print('Must specify either -s or -l')

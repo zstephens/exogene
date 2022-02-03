@@ -258,9 +258,9 @@ for k in sorted(ALIGNMENTS_BY_RNAME.keys()):
 		p_alpha.append(float(n[6]+15.)/(60.+15.))
 
 		if 'virus' in n[2]:
-			p_color.append('red')
+			p_color.append('yellow')
 		else:
-			p_color.append('blue')
+			p_color.append('purple')
 
 		delta_pointy     = 0.8*(n[1]-n[0])
 		delta_pointy_rev = 0.2*(n[1]-n[0])
