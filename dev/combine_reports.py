@@ -553,7 +553,12 @@ for i in xrange(len(clustered_events)):
 	pmin = min([m[2] for m in n])
 	pmax = max([m[3] for m in n])
 	if isInBadRange(r1,pmin) == False and isInBadRange(r1,pmax) == False:
-		order_to_process_clusters.append((LEXICO_2_IND[r1],r2,pmin,pmax,i))
+		if r1 in LEXICO_2_IND:
+			order_to_process_clusters.append((LEXICO_2_IND[r1],r2,pmin,pmax,i))
+		elif 'chr'+r1 in LEXICO_2_IND:
+			order_to_process_clusters.append((LEXICO_2_IND['chr'+r1],r2,pmin,pmax,i))
+		else:
+			order_to_process_clusters.append((r1,r2,pmin,pmax,i))
 order_to_process_clusters = [n[4] for n in sorted(order_to_process_clusters)]
 
 #
