@@ -232,7 +232,7 @@ date >> software.log
 # STEP 5) DETECT INTEGRATION BREAKPOINTS FROM SOFT-CLIP AND DISCORDANT EVIDENCE
 #
 echo "Step 5) Identifying integration sites" >> software.log
-sed -e "1,${n_contigs}d" $ARG_REF.fai > VReads_0.accessions
+sed -e "1,${n_contigs}d" $ARG_REF.fai | cut -f1 > VReads_0.accessions
 $samtools view ${name}_viral.bam | cut -f1,3 > VReads_1.1
 fgrep -f VReads_0.accessions VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
