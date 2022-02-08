@@ -238,7 +238,6 @@ fgrep -f VReads_0.accessions VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
 $samtools view ${name}_viral.bam | fgrep -f VReads_1.3 > VReads_1
 $viralreads_to_report VReads_1 $viral_json Viral_Reads_Report.tsv
-exit 1
 rm VReads_*
 # run combine_reports.py with some lenient thresholds to spit out all integrations
 $combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5 -v1 $viral_json

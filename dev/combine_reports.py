@@ -183,7 +183,7 @@ parser.add_argument('-o',   type=str, required=True,  metavar='<str>', help="* o
 parser.add_argument('-s',   type=str, required=False, metavar='<str>', help="short_reads_report.tsv", default='')
 parser.add_argument('-l',   type=str, required=False, metavar='<str>', help="long_reads_report.tsv", default='')
 parser.add_argument('-v',   type=str, required=False, metavar='<str>', help="virus_of_interest", default='')
-parser.add_argument('-v1',  type=str, required=False, metavar='<str>', help="virusNames.json", default='')
+parser.add_argument('-v1',  type=str, required=True,  metavar='<str>', help="ref.fa.exogene.json")
 parser.add_argument('-v2',  type=str, required=False, metavar='<str>', help="virusAccessionToCommonName.nbr", default='')
 parser.add_argument('-c',   type=str, required=False, metavar='<str>', help="SRR id to compare against", default='')
 parser.add_argument('-a',   type=str, required=False, metavar='<str>', help="path/to/bed/annotations/", default='')
@@ -250,8 +250,6 @@ f.close()
 
 # read in viral short-hand that I used for the long read workflow
 VIRAL_JSON = args.v1
-if VIRAL_JSON == '':
-	VIRAL_JSON = SIM_PATH + 'resources/HumanViral_Reference_12-12-2018_simpleNames.json'
 if exists_and_is_nonZero(VIRAL_JSON) == False:
 	print('Error: Viral json not found (-v1)')
 	exit(1)
@@ -514,7 +512,7 @@ if len(IN_LONG):
 		splt = line.strip().split('\t')
 		if len(splt) == 0:
 			continue
-			
+
 		bp1  = splt[1].split(':')
 		bp2  = splt[2].split(':')
 		qc1  = splt[3].split(',')
