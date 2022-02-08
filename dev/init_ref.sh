@@ -27,7 +27,7 @@ if [ "$ARG_OUT" == "" ]; then
   exit 1
 fi
 if [ "$ARG_HVR" == "" ]; then
-  HVR=/home/refs/HumanViral_Reference_02-07-2022.fa
+  HVR=/home/exogene/dev/resources/HumanViral_Reference_02-07-2022.fa
   echo
   echo "Using default viral reference sequences:"
   echo $HVR
