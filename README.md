@@ -20,7 +20,7 @@ A workflow for detecting viral integrations from both short read and long read s
 
 If you wish to use viral reference sequences different than what Exogene uses by default, you can use the `-v` input option to specify a fasta file of viral genomes. Exogene expects that contigs are named in the following format:
 
-`>accession_id full_name`  
+`>accession_id full_name` (space delimited)
 
 For example: `>NC_009334 Human herpesvirus 4, complete genome.`  
 
@@ -88,21 +88,10 @@ The Docker container contains a small quantity of test data which can be process
 `    -r /path/to/hg38_and_viral.fa \ `  
 `    -o /path/to/out_SR/ `  
 
-`python combine_reports.py \ `  
-`    -s /path/to/out_SR/Viral_Reads_Report.tsv \ `  
-`    -o /path/to/out_SR/plots/ \ `  
-`    -ms 20 \ `  
-`    -md 20 \ `  
-`    -c SRR3104446 `  
-
 `./Exogene-LR.sh \ `  
 `    -f -f /home/test_data/a1el_ccs.fq.gz \ `  
 `    -r /path/to/hg38_and_viral.fa \ `  
 `    -m hifi \ `  
 `    -o /path/to/out_LR/ `  
-
-`python combine_reports.py \ `  
-`    -l /path/to/out_LR/Viral_Junctions_LongReads.tsv \ `  
-`    -o /path/to/out_LR/plots/ `  
 
 For the included hg38+viral reference, the bwa/pbmm2 alignment steps require ~32GB of memory.
