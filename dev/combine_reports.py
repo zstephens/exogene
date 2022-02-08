@@ -374,7 +374,10 @@ if len(IN_SHORT):
 				ind_altc = splt.index('alt_cigar')
 			continue
 
-		splt   = line.strip().split('\t')
+		splt = line.strip().split('\t')
+		if len(splt) == 0:
+			continue
+
 		myName = splt[ind_name]
 		myRef  = splt[ind_ref]
 		myPos  = int(splt[ind_pos])
@@ -507,7 +510,11 @@ if len(IN_SHORT):
 if len(IN_LONG):
 	f = open(IN_LONG, 'r')
 	for line in f:
+
 		splt = line.strip().split('\t')
+		if len(splt) == 0:
+			continue
+			
 		bp1  = splt[1].split(':')
 		bp2  = splt[2].split(':')
 		qc1  = splt[3].split(',')
