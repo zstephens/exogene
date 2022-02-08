@@ -14,7 +14,7 @@ f = open(sys.argv[1],'r')
 READNAME_DICT = json.load(f)
 f.close()
 
-REV_DICT      = {READNAME_DICT[k]:k for k in READNAME_DICT.keys()}
+REV_DICT      = {READNAME_DICT[k]:k for k in READNAME_DICT.keys() if k[:5] == 'virus'}
 REV_DICT_ABRV = {READNAME_DICT[k].split(' ')[0]:k for k in READNAME_DICT.keys()}
 
 ks1 = sorted(REV_DICT.keys())

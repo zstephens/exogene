@@ -2,7 +2,7 @@
 
 USAGE_1="Usage (bam): `basename $0` -b input.bam -r ref.fa -o output_dir/"
 USAGE_2="Usage (fq):  `basename $0` -f1 read1.fq.gz -f2 read2.fq.gz -r ref.fa -o output_dir/"
-USAGE_3="optional arguments: -k bwa_seed_size [30] -d duster_exclude_frac [70] -t transcriptome_exclude_frac [90]"
+USAGE_3="optional arguments: -v viral.fa -k bwa_seed_size [30] -d duster_exclude_frac [70] -t transcriptome_exclude_frac [90]"
 
 #input argument parsing
 ARG_BAM=""
@@ -10,6 +10,7 @@ ARG_R1=""
 ARG_R2=""
 ARG_REF=""
 ARG_OUT=""
+ARG_HVR=""
 DELETE_TEMP="false"
 # bwa seed size
 ARG_BWA_SEED=30
@@ -24,6 +25,7 @@ while [[ "$#" -gt 0 ]]; do case $1 in
   -f2|--read2) ARG_R2="$2"; shift;;
   -r|--reference) ARG_REF="$2"; shift;;
   -o|--outdir) ARG_OUT="$2"; shift;;
+  -v|--viral) ARG_HVR="$2"; shift;;
   -k|--bwaseed) ARG_BWA_SEED="$2"; shift;;
   -d|--dusterfrac) ARG_DUSTER_FRAC="$2"; shift;;
   -t|--transcriptfrac) ARG_TRANSCRIPT_FRAC="$2"; shift;;
@@ -63,6 +65,20 @@ if [ "$ARG_OUT" == "" ]; then
   echo
   exit 1
 fi
+# which viral references are we using?
+if [ "$ARG_HVR" == "" ]; then
+  HVR=/home/exogene/dev/resources/HumanViral_Reference_02-07-2022.fa
+  echo
+  echo "Using default viral reference sequences:"
+  echo $HVR
+  echo
+else
+  HVR=$ARG_HVR
+  echo
+  echo "Using user-specified viral reference sequences:"
+  echo $HVR
+  echo
+fi
 
 # exes
 samtools=/opt/conda/envs/samtools/bin/samtools
@@ -78,15 +94,16 @@ sortBed=/opt/conda/envs/bedtools/bin/sortBed
 jq=/opt/conda/bin/jq
 
 # scripts
-duster_filt="python /home/exogene/dev/duster_filter.py"
-readlist_to_fq="python /home/exogene/dev/readlist_2_fq.py"
-readlist_to_fq_bam="python /home/exogene/dev/readlist_2_fq_from_bam.py"
-aln_match_filter="python /home/exogene/dev/aln_match_filter.py"
-viralreads_to_report="python /home/exogene/dev/createViralReadsReport.py"
-combine_reports="python /home/exogene/dev/combine_reports.py"
+python_path=python
+exogene_path=/home/exogene/dev
+duster_filt="$python_path $exogene_path/duster_filter.py"
+readlist_to_fq="$python_path $exogene_path/readlist_2_fq.py"
+readlist_to_fq_bam="$python_path $exogene_path/readlist_2_fq_from_bam.py"
+aln_match_filter="$python_path $exogene_path/aln_match_filter.py"
+viralreads_to_report="$python_path $exogene_path/createViralReadsReport.py"
+combine_reports="$python_path $exogene_path/combine_reports.py"
 
 # refs
-HVR=/home/refs/HumanViral_Reference_12-12-2018.fa
 RNA=/home/refs/GRCh38_RNA_Reference_4-30-2019.fa
 Decoy=/home/refs/GRCh38_Decoy_Reference_4-30-2019.fa
 
@@ -95,31 +112,44 @@ ExcludeRegions=/home/exogene/dev/resources/Merged_ExcludeRegions.bed
 Genes1KB=/home/exogene/dev/resources/HG38_ProteinCoding-1KB.bed
 GenesGS=/home/exogene/dev/resources/HG38_ProteinCoding-GS.bed
 GenesGSs=/home/exogene/dev/resources/HG38_ProteinCoding-GS_sort.bed
+viral_json=${ARG_REF}.exogene.json
 
 if [ "$INPUT_MODE" == "bam" ]; then
   # check input bam file path
   if [ ! -f $ARG_BAM ]; then
     echo "
-  Please check the path to the input BAM file."
+  Input BAM file not found:"
+    echo $ARG_BAM
     exit 1
   fi
 elif [ "$INPUT_MODE" == "fq" ]; then
   # check input fq file paths
   if [ ! -f $ARG_R1 ]; then
     echo "
-  Please check the path to the input read_1 file."
+  Input read1 file not found:"
+    echo $ARG_R1
     exit 1
   fi
   if [ ! -f $ARG_R2 ]; then
     echo "
-  Please check the path to the input read_2 file."
+  Input read2 file not found:"
+    echo $ARG_R2
     exit 1
   fi
 fi
+
 # check input ref file path
 if [ ! -f $ARG_REF ]; then
   echo "
-Please check the path to the input ref file."
+Reference fasta not found:"
+  echo $ARG_REF
+  exit 1
+fi
+# check input exogene json
+if [ ! -f $viral_json ]; then
+  echo "
+exogene.json file not found:"
+  echo $viral_json
   exit 1
 fi
 # check specified output space path
@@ -131,7 +161,6 @@ Please check the path to the specified output directory."
 fi
 
 # get number of human ref contigs from exogene json
-viral_json=${ARG_REF}.exogene.json
 n_contigs=$(${jq} ".n_contigs" ${viral_json} | tr -d \")
 
 # check samtools version (for samtools sort input syntax)

@@ -70,17 +70,50 @@ if [ "$ARG_OUT" == "" ]; then
   exit 1
 fi
 
+# exes
+samtools=/opt/conda/envs/samtools/bin/samtools
+pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
+pbsv=/opt/conda/envs/pbmm2/bin/pbsv
+duster=/usr/bin/dustmasker
+
+# scripts
+python_path=python
+exogene_path=/home/exogene/dev
+grep_virus="$python_path $exogene_path/grep_virus_from_sam.py"
+gen_report="$python_path $exogene_path/plot_viral_long_reads.py"
+vcf_to_fa="$python_path $exogene_path/vcf_2_insfa.py"
+duster_filt="$python_path $exogene_path/duster_filter.py"
+viral_ins="$python_path $exogene_path/append_viral_ins.py"
+
+# resources
+viral_json=${ARG_REF}.exogene.json
+
 # check input reads file path
-if [ ! -f $ARG_READS ]; then
+if [ "$ARG_READS" != "" ] && [ ! -f $ARG_READS ]; then
   echo "
-Please check the path to the input reads file."
+Input reads not found:"
+  echo $ARG_READS
   exit 1
 fi
-
+# check input bam file path
+if [ "$ARG_BAM" != "" ] && [ ! -f $ARG_BAM ]; then
+  echo "
+Input bam not found:"
+  echo $ARG_BAM
+  exit 1
+fi
 # check input ref file path
 if [ ! -f $ARG_REF ]; then
   echo "
-Please check the path to the input ref file."
+Reference fasta not found:"
+  echo $ARG_REF
+  exit 1
+fi
+# check input exogene json
+if [ ! -f $viral_json ]; then
+  echo "
+exogene.json file not found:"
+  echo $viral_json
   exit 1
 fi
 
@@ -110,24 +143,6 @@ else
   exit 1
 fi
 
-# exes
-samtools=/opt/conda/envs/samtools/bin/samtools
-pbmm2=/opt/conda/envs/pbmm2/bin/pbmm2
-pbsv=/opt/conda/envs/pbmm2/bin/pbsv
-duster=/usr/bin/dustmasker
-
-# scripts
-python_path=python
-exogene_path=/home/exogene/dev
-grep_virus="$python_path $exogene_path/grep_virus_from_sam.py"
-gen_report="$python_path $exogene_path/plot_viral_long_reads.py"
-vcf_to_fa="$python_path $exogene_path/vcf_2_insfa.py"
-duster_filt="$python_path $exogene_path/duster_filter.py"
-viral_ins="$python_path $exogene_path/append_viral_ins.py"
-
-# resources
-viral_db_json="$exogene_path/resources/HumanViral_Reference_12-12-2018_simpleNames.json"
-
 mkdir -p $ARG_OUT
 cd $ARG_OUT
 
@@ -137,10 +152,10 @@ if [ ! -f pbmm2_viralReads.sam ]; then
     if [ ! -f pbmm2_aln.bam ]; then
       $pbmm2 align $ARG_REF $ARG_READS pbmm2_aln.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
     fi
-    $samtools view pbmm2_aln.bam | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+    $samtools view pbmm2_aln.bam | $grep_virus $viral_json > pbmm2_viralReads.sam
     MY_BAM="pbmm2_aln.bam"
   else
-    $samtools view $ARG_BAM | $grep_virus $viral_db_json > pbmm2_viralReads.sam
+    $samtools view $ARG_BAM | $grep_virus $viral_json > pbmm2_viralReads.sam
     MY_BAM=$ARG_BAM
   fi
 fi
@@ -163,7 +178,7 @@ fi
 if [ ! -f pbsv_ins_virus.sam ]; then
   $vcf_to_fa -v pbsv_out.vcf -p PBSV -o pbsv_ins.fa
   $pbmm2 align $ARG_REF pbsv_ins.fa pbsv_ins.bam $pbmm2_preset --sort --sample sample1 --rg '@RG\tID:movie1'
-  $samtools view pbsv_ins.bam | $grep_virus $viral_db_json > pbsv_ins_virus.sam
+  $samtools view pbsv_ins.bam | $grep_virus $viral_json > pbsv_ins_virus.sam
 fi
 # filter out low complexity insertions
 if [ ! -f Viral_Ins_LongReads.tsv ]; then
@@ -174,3 +189,6 @@ if [ ! -f Viral_Ins_LongReads.tsv ]; then
   cat Viral_Junctions_LongReads.tsv Viral_Ins_LongReads.tsv > combined.tsv
   mv combined.tsv Viral_Junctions_LongReads.tsv
 fi
+
+# create final report
+$combine_reports -l Viral_Junctions_LongReads.tsv -o results/ -ml 1 --report-exclude --no-hg38-filt -v1 $viral_json

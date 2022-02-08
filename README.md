@@ -18,12 +18,20 @@ A workflow for detecting viral integrations from both short read and long read s
 `    -i /path/to/hg38.fa \ `  
 `    -o /path/to/hg38_plus_viral.fa`  
 
+If you wish to use viral reference sequences different than what Exogene uses by default, you can use the `-v` input option to specify a fasta file of viral genomes. Exogene expects that contigs are named in the following format:
+
+`>accession_id full_name`  
+
+For example: `>NC_009334 Human herpesvirus 4, complete genome.`  
+
 ### Running Exogene-SR (with BAM input)
 
 `/home/Exogene-SR.sh \ `  
 `    -b input.bam \ `  
 `    -r hg38_plus_viral.fa \ `  
 `    -o outDir/`  
+
+If custom viral sequences were used, the `-v` input option will be required.
 
 ### Running Exogene-SR (with FQ input)
 
@@ -33,7 +41,7 @@ A workflow for detecting viral integrations from both short read and long read s
 `    -r hg38_plus_viral.fa \ `  
 `    -o outDir/`  
 
-input FASTQ files must be gzipped, and readnames must end with either "/1" or "/2". Currently Exogene-SR does not support single-end reads.
+Input FASTQ files must be gzipped. Currently Exogene-SR does not support single-end reads. If custom viral sequences were used, the `-v` input option will be required.
 
 ### Running Exogene-LR (with FASTQ input, e.g. PacBio HiFi reads)
 
