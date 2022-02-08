@@ -253,11 +253,27 @@ VIRAL_JSON = args.v1
 if VIRAL_JSON == '':
 	VIRAL_JSON = SIM_PATH + 'resources/HumanViral_Reference_12-12-2018_simpleNames.json'
 if exists_and_is_nonZero(VIRAL_JSON) == False:
-	print('Error: Viral simple-names json not found (-v1)')
+	print('Error: Viral json not found (-v1)')
 	exit(1)
 f = open(VIRAL_JSON, 'r')
 VIRAL_NAME_DICT = json.load(f)
 f.close()
+CONTIG_TO_FULLNAME = {}
+for k in VIRAL_NAME_DICT.keys():
+	splt = VIRAL_NAME_DICT[k].split(' ')
+	my_acc  = splt[0]
+	my_name = ' '.join(splt[1:]).split(',')[0]
+	CONTIG_TO_FULLNAME[my_acc] = my_name
+
+def get_name_of_virus(v):
+	v_out = v
+	if v in ID_TO_ACCESSION:
+		v_out = ID_TO_ACCESSION[v]
+	if v_out in ACCESSION_TO_TAXONOMY:
+		v_out = ACCESSION_TO_TAXONOMY[v_out]
+	elif v in CONTIG_TO_FULLNAME:
+		v_out = CONTIG_TO_FULLNAME[v]
+	return v_out
 
 # get viral accession ids and whatnot
 VIRAL_ACCESSIONS = args.v2
@@ -403,27 +419,22 @@ if len(IN_SHORT):
 	for k in data_byReadName.keys():
 		# only read pairs where both passed filters...
 		if len(data_byReadName[k]) == 2:
+
 			# human - human
 			if sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 2:
 				pass
+
 			# virus - virus
 			elif sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 0:
-				vref1 = data_byReadName[k][0][0]
-				vref2 = data_byReadName[k][1][0]
-				if vref1 in ID_TO_ACCESSION:
-					vref1 = ID_TO_ACCESSION[vref1]
-				if vref1 in ACCESSION_TO_TAXONOMY:
-					vref1 = ACCESSION_TO_TAXONOMY[vref1]
-				if vref2 in ID_TO_ACCESSION:
-					vref2 = ID_TO_ACCESSION[vref2]
-				if vref2 in ACCESSION_TO_TAXONOMY:
-					vref2 = ACCESSION_TO_TAXONOMY[vref2]
+				vref1 = get_name_of_virus(data_byReadName[k][0][0])
+				vref2 = get_name_of_virus(data_byReadName[k][1][0])
 				if vref1 not in viral_presence:
 					viral_presence[vref1] = 0
 				if vref2 not in viral_presence:
 					viral_presence[vref2] = 0
 				viral_presence[vref1] += 1
 				viral_presence[vref2] += 1
+
 			# human - virus only
 			elif sum([1*(n[0] in HUMAN_CHR) for n in data_byReadName[k]]) == 1:
 
@@ -434,17 +445,14 @@ if len(IN_SHORT):
 					[r2, r1] = data_byReadName[k]
 
 				# collapse viral reference ids to common name
-				if r2[0] in ID_TO_ACCESSION:
-					r2[0] = ID_TO_ACCESSION[r2[0]]
-				if r2[0] in ACCESSION_TO_TAXONOMY:
-					r2[0] = ACCESSION_TO_TAXONOMY[r2[0]]
+				viral_ref = get_name_of_virus(r2[0])
 				# tabulate
-				if r2[0] not in viral_presence:
-					viral_presence[r2[0]] = 0
-				viral_presence[r2[0]] += 1
+				if viral_ref not in viral_presence:
+					viral_presence[viral_ref] = 0
+				viral_presence[viral_ref] += 1
 
 				# speed things up, only extract reads pertaining to virus-of-interest
-				if len(VOI) and r2[0] != VOI:
+				if len(VOI) and viral_ref != VOI:
 					continue
 
 				# softclip evidence
@@ -468,7 +476,7 @@ if len(IN_SHORT):
 				#print('--',[bp_range1_left, bp_range1_right])
 
 				# closest-point hierarchal clustering
-				myJunction = [r1[0], r2[0], r1[1], r1[1] + span1]
+				myJunction = [r1[0], viral_ref, r1[1], r1[1] + span1]
 				found_a_hit = False
 				for i in xrange(len(clustered_events)):
 					for j in xrange(len(clustered_events[i])):
@@ -511,11 +519,7 @@ if len(IN_LONG):
 		else:
 			myType = 'CLR'
 	
-		viral_ref = VIRAL_NAME_DICT[bp2[0]].split(' ')[0]
-		if viral_ref in ID_TO_ACCESSION:
-			viral_ref = ID_TO_ACCESSION[viral_ref]
-		if viral_ref in ACCESSION_TO_TAXONOMY:
-			viral_ref = ACCESSION_TO_TAXONOMY[viral_ref]
+		viral_ref = get_name_of_virus(VIRAL_NAME_DICT[bp2[0]].split(' ')[0])
 		# tabulate
 		if viral_ref not in viral_presence:
 			viral_presence[viral_ref] = 0

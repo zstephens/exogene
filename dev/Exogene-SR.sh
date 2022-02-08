@@ -75,6 +75,7 @@ intersectbed=/opt/conda/envs/bedtools/bin/intersectBed
 clusterbed=/opt/conda/envs/bedtools/bin/clusterBed
 mergeBed=/opt/conda/envs/bedtools/bin/mergeBed
 sortBed=/opt/conda/envs/bedtools/bin/sortBed
+jq=/opt/conda/bin/jq
 
 # scripts
 duster_filt="python /home/exogene/dev/duster_filter.py"
@@ -94,8 +95,6 @@ ExcludeRegions=/home/exogene/dev/resources/Merged_ExcludeRegions.bed
 Genes1KB=/home/exogene/dev/resources/HG38_ProteinCoding-1KB.bed
 GenesGS=/home/exogene/dev/resources/HG38_ProteinCoding-GS.bed
 GenesGSs=/home/exogene/dev/resources/HG38_ProteinCoding-GS_sort.bed
-ViralKey=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018.key
-ViralAcc=/home/exogene/dev/resources/HumanViral_Reference_12-12-2018.accessions
 
 if [ "$INPUT_MODE" == "bam" ]; then
   # check input bam file path
@@ -130,6 +129,10 @@ if [ ! -d $ARG_OUT ]; then
 Please check the path to the specified output directory."
   exit 1
 fi
+
+# get number of human ref contigs from exogene json
+viral_json=${ARG_REF}.exogene.json
+n_contigs=$(${jq} ".n_contigs" ${viral_json} | tr -d \")
 
 # check samtools version (for samtools sort input syntax)
 sam_major=$($samtools 2>&1 | grep "Version:" | cut -d " " -f 2 | cut -d "." -f 1)
@@ -229,14 +232,15 @@ date >> software.log
 # STEP 5) DETECT INTEGRATION BREAKPOINTS FROM SOFT-CLIP AND DISCORDANT EVIDENCE
 #
 echo "Step 5) Identifying integration sites" >> software.log
+sed -i -e "1,${n_contigs}d" $ARG_REF.fai > VReads_0.accessions
 $samtools view ${name}_viral.bam | cut -f1,3 > VReads_1.1
-fgrep -f $ViralAcc VReads_1.1 > VReads_1.2
+fgrep -f VReads_0.accessions VReads_1.1 > VReads_1.2
 cut -f1 VReads_1.2 | sort | uniq > VReads_1.3
 $samtools view ${name}_viral.bam | fgrep -f VReads_1.3 > VReads_1
-$viralreads_to_report VReads_1 $ViralKey Viral_Reads_Report.tsv
+$viralreads_to_report VReads_1 $viral_json Viral_Reads_Report.tsv
 rm VReads_*
 # run combine_reports.py with some lenient thresholds to spit out all integrations
-$combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5
+$combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5 -v1 $viral_json
 echo ""
 cat results/integrations.txt
 echo ""

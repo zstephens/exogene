@@ -1,7 +1,8 @@
+import json
 import re
 import sys
 
-# python createViralReadsReport.py viralReadDat viralKeys outReport.tsv
+# python createViralReadsReport.py viralReadDat viral.json outReport.tsv
 
 HUMAN_CHR  = [str(n) for n in range(1,23)] + ['X', 'Y', 'M', 'Mt']
 HUMAN_CHR += ['chr'+n for n in HUMAN_CHR]
@@ -25,10 +26,14 @@ OUT_R = sys.argv[3]
 
 viral_keyDict = {}
 f = open(V_KEY,'r')
-for line in f:
-	splt = line.strip().split('\t')
-	viral_keyDict[splt[0]] = splt[1].replace('!',' ')
+viral_dat_dict = json.load(f)
 f.close()
+for k in viral_dat_dict.keys():
+	if k[:5] == 'virus':
+		splt = viral_dat_dict[k].split(' ')
+		my_acc  = splt[0]
+		my_name = ' '.join(splt[1:])
+		viral_keyDict[my_acc] = my_name
 
 outDat_by_rName = {}
 f = open(V_DAT,'r')
