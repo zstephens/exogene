@@ -84,6 +84,7 @@ gen_report="$python_path $exogene_path/plot_viral_long_reads.py"
 vcf_to_fa="$python_path $exogene_path/vcf_2_insfa.py"
 duster_filt="$python_path $exogene_path/duster_filter.py"
 viral_ins="$python_path $exogene_path/append_viral_ins.py"
+combine_reports="$python_path $exogene_path/combine_reports.py"
 
 # resources
 viral_json=${ARG_REF}.exogene.json
@@ -192,3 +193,6 @@ fi
 
 # create final report
 $combine_reports -l Viral_Junctions_LongReads.tsv -o results/ -ml 1 --report-exclude --no-hg38-filt -v1 $viral_json
+echo ""
+cat results/integrations.txt
+echo ""
