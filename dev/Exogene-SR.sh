@@ -271,7 +271,7 @@ rm VReads_*
 # run combine_reports.py with some lenient thresholds to spit out all integrations
 $combine_reports -s Viral_Reads_Report.tsv -o results/ -ms 2 -md 5 -v1 $viral_json
 echo ""
-cat results/integrations.txt
+cat results/integrations.tsv
 echo ""
 date >> software.log
 

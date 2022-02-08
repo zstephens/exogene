@@ -765,19 +765,18 @@ for i in order_to_process_clusters:
 			pe_coords_to_compare = sorted_coord_list_to_ranges([pe_to_report[n] for n in xrange(len(pe_to_report)) if pe_density[n] >= POLY_PE_STEPS-1])
 			pe_coords_to_compare = [int(np.mean(n)+0.5) for n in pe_coords_to_compare]
 			for pem in pe_coords_to_compare:
-				mapq0_percent = 'N/A'
+				mapq0_percent = '-'
 				if pem in pe_mapq_byPos:
 					mapq0_frac    = float(pe_mapq_byPos[pem].count(0))/len(pe_mapq_byPos[pem])
 					mapq0_percent = '{0:0.2f}%'.format(100.*mapq0_frac)
 				myPECount_2 = myPECount
 				if pem in pe_count:
 					myPECount_2 = pe_count[pem]
-
+				#print('PEM:', pem, mapq0_percent)
 				gcl = get_compare(clustered_events[i][0][0], pem)
 				if len(gcl) > 0:
 					for gc in gcl:
 						COMPARE_OUT[gc].append((clustered_events[i][0][0], pem, str(myPECount_2)+'/'+str(myPECount), mapq0_percent, abs(pem-gc[1]), 'DISCORDANT'))
-				#print('PEM:', pem, mapq0_percent)
 
 		pe_to_report = sorted_coord_list_to_ranges(pe_to_report)
 
@@ -988,11 +987,12 @@ for i in order_to_process_clusters:
 		if len(bed_out):
 			out_ann = ','.join(bed_out)
 		#
-		(out_scp, out_scc) = ('-', '0')
+		(out_scp, out_scc, out_sc0) = ('-', '0', '-')
 		if len(sc_str):
 			out_scp = sc_str.split(' ')[5]
 			out_scc = sc_str.split(' ')[3]
 			out_pos = sc_str.split(' ')[5]
+			out_sc0 = sc_str.split(' ')[9]
 		#
 		out_dip = '-'
 		if max_pe > 0:
@@ -1027,7 +1027,7 @@ for i in order_to_process_clusters:
 			out_nge  = nearest_hit[1][1]
 			#out_nge += ' (' + nearest_hit[1][0] + ')'
 		#
-		out_report_data.append([out_chr, out_pos, out_num, out_vir, out_nge, out_ann, out_scp, out_scc, out_dip, out_dic, out_lrp, out_lrc, out_lrm, out_lr0])
+		out_report_data.append([out_chr, out_pos, out_num, out_vir, out_nge, out_ann, out_scp, out_scc, out_sc0, out_dip, out_dic, out_lrp, out_lrc, out_lrm, out_lr0])
 
 	if SKIP_PLOTTING == False:
 		#mpl.show()
@@ -1069,10 +1069,10 @@ header = []
 if len(SAMPLE_NAME):
 	header.append('SAMPLE_NAME')
 header += ['CHR', 'INTEGRATION_POS', '#READS', 'VIRUS', 'NEAREST_GENE', 'ANNOTATION',
-           'SOFTCLIP_POS', '#SOFTCLIP',
+           'SOFTCLIP_POS', '#SOFTCLIP', 'SOFTCLIP_MAPQ0',
            'DISCORDANT_POS', '#DISCORDANT',
            'LONGREAD_POS', '#LONGREAD', '#HIFI/CLR', '#MAPQ0_HIFI/CLR']
-f = open(OUT_DIR+'integrations.txt', 'w')
+f = open(OUT_DIR+'integrations.tsv', 'w')
 f.write('\t'.join(header)+'\n')
 for n in out_report_data:
 	if len(SAMPLE_NAME):

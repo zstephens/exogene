@@ -194,5 +194,5 @@ fi
 # create final report
 $combine_reports -l Viral_Junctions_LongReads.tsv -o results/ -ml 1 --report-exclude --no-hg38-filt -v1 $viral_json
 echo ""
-cat results/integrations.txt
+cat results/integrations.tsv
 echo ""
