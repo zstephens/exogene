@@ -112,7 +112,7 @@ fi
 
 # exes
 samtools=/research/bsi/tools/biotools/samtools/1.10/bin/samtools
-pbmm2=/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/pbmm2
+pbmm2=/research/bsi/tools/biotools/smrtlink/11/smrtcmds/bin/pbmm2
 pbsv=/research/bsi/tools/biotools/smrtlink/8.0/bin/smrtcmds/bin/pbsv
 duster=/research/bsi/tools/biotools/blast/2.10.0/bin/dustmasker
 
