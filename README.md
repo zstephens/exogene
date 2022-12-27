@@ -82,14 +82,14 @@ Either -s or -l must be specified (or both, for a combined report). Viral_Reads_
 
 The Docker container contains a small quantity of test data which can be processed as follows:
 
-`./Exogene-SR.sh \ `  
+`/home/Exogene-SR.sh \ `  
 `    -f1 /home/test_data/SRR3104446_1.fq.gz \ `  
 `    -f2 /home/test_data/SRR3104446_2.fq.gz \ `  
 `    -r /path/to/hg38_and_viral.fa \ `  
 `    -o /path/to/out_SR/ `  
 
-`./Exogene-LR.sh \ `  
-`    -f -f /home/test_data/a1el_ccs.fq.gz \ `  
+`/home/Exogene-LR.sh \ `  
+`    -f /home/test_data/a1el_ccs.fq.gz \ `  
 `    -r /path/to/hg38_and_viral.fa \ `  
 `    -m hifi \ `  
 `    -o /path/to/out_LR/ `  
