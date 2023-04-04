@@ -18,11 +18,15 @@ A workflow for detecting viral integrations from both short read and long read s
 `    -i /path/to/hg38.fa \ `  
 `    -o /path/to/hg38_plus_viral.fa`  
 
+#### Using custom viral references:
+
 If you wish to use viral reference sequences different than what Exogene uses by default, you can use the `-v` input option to specify a fasta file of viral genomes. Exogene expects that contigs are named in the following format:
 
 `>accession_id full_name` (space delimited)
 
 For example: `>NC_009334 Human herpesvirus 4, complete genome.`  
+
+Additionally, the viral fasta should be indexed using `bwa index`  
 
 ### Running Exogene-SR (with BAM input)
 
