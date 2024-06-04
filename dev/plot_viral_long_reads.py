@@ -102,7 +102,7 @@ TRANSCRIPT_TRACK = {}
 #
 IN_TRANSCRIPTS_BED = args.t
 if IN_TRANSCRIPTS_BED[-3:] == '.gz':
-    f = gzip.open(BED_DIR + IN_TRANSCRIPTS_BED, 'r')
+    f = gzip.open(BED_DIR + IN_TRANSCRIPTS_BED, 'rt')
 else:
     f = open(BED_DIR + IN_TRANSCRIPTS_BED, 'r')
 for line in f:
